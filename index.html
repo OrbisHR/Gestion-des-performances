@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Connexion RH</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://alcdn.msauth.net/browser/2.37.0/js/msal-browser.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    .bg-gradient {
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+    }
+    .btn-outlook {
+      transition: all 0.3s ease;
+    }
+    .btn-outlook:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+    }
+    .card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+  <div class="card bg-white rounded-xl shadow-xl overflow-hidden w-full max-w-md">
+    <div class="bg-gradient py-6 px-8 text-center">
+      <i class="fas fa-user-tie text-white text-5xl mb-4"></i>
+      <h1 class="text-2xl font-bold text-white">Plateforme Fixation et evaluation des Objectifs</h1>
+      <p class="text-blue-100 mt-2">Accédez à vos outils de gestion des ressources humaines</p>
+    </div>
+    
+    <div class="p-8">
+      <div class="mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-2">Connexion sécurisée</h2>
+        <p class="text-gray-600">Utilisez votre compte professionnel pour accéder à la plateforme</p>
+      </div>
+      
+      <button id="loginBtn" class="btn-outlook w-full flex items-center justify-center gap-3 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg">
+        <i class="fab fa-microsoft text-xl"></i>
+        <span>Se connecter avec Outlook</span>
+      </button>
+      
+      <div class="mt-6 text-center">
+        <p class="text-sm text-gray-500">En vous connectant, vous acceptez nos <a href="#" class="text-blue-600 hover:underline">conditions d'utilisation</a></p>
+      </div>
+    </div>
+    
+    <div class="bg-gray-50 px-8 py-4 text-center border-t border-gray-200">
+      <p class="text-sm text-gray-500">Besoin d'aide ? <a href="#" class="text-blue-600 hover:underline">Contactez le support</a></p>
+    </div>
+  </div>
+
+  <div id="loadingOverlay" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden">
+    <div class="bg-white p-6 rounded-lg shadow-lg max-w-sm w-full text-center">
+      <div class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+      <h3 class="text-lg font-medium text-gray-900">Connexion en cours</h3>
+      <p class="mt-2 text-gray-600">Redirection vers Microsoft Outlook...</p>
+    </div>
+  </div>
+
+  <script>
+    console.log("Initialisation MSAL...");
+    
+    const msalConfig = {
+      auth: {
+        clientId: "27cd1750-4356-4fd4-a4d2-0b418ca13f34", // 🔁 Remplacez par votre vrai client ID Azure
+        authority: "https://login.microsoftonline.com/common",
+        redirectUri: "http://localhost:5500" // 🔁 Mets le bon port de ton Live Server
+      },
+      cache: {
+        cacheLocation: "sessionStorage",
+        storeAuthStateInCookie: false
+      }
+    };
+
+    const msalInstance = new msal.PublicClientApplication(msalConfig);
+    const loginRequest = {
+      scopes: ["User.Read"],
+      prompt: "select_account"
+    };
+
+    // Vérifie si nous sommes dans une redirection après authentification
+    msalInstance.handleRedirectPromise()
+      .then(handleResponse)
+      .catch(error => {
+        console.error("Erreur lors de la gestion de la redirection:", error);
+        showError("Une erreur est survenue lors de la connexion");
+      });
+
+    // Gestion du clic sur le bouton de connexion
+    document.getElementById("loginBtn").addEventListener("click", async () => {
+      try {
+        showLoading();
+        
+        // Vérifie d'abord s'il y a des comptes déjà connectés
+        const accounts = msalInstance.getAllAccounts();
+        if (accounts.length > 0) {
+          // Si un compte est déjà connecté, utilise le token existant
+          const silentRequest = {
+            scopes: ["User.Read"],
+            account: accounts[0]
+          };
+          
+          try {
+            const response = await msalInstance.acquireTokenSilent(silentRequest);
+            handleResponse(response);
+          } catch (silentError) {
+            console.log("Échec de l'acquisition silencieuse du token, tentative de login interactif", silentError);
+            await msalInstance.loginRedirect(loginRequest);
+          }
+        } else {
+          // Aucun compte connecté, lance le processus de connexion
+          await msalInstance.loginRedirect(loginRequest);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la tentative de connexion:", error);
+        hideLoading();
+        showError("Impossible de démarrer le processus de connexion");
+      }
+    });
+
+    function handleResponse(response) {
+      hideLoading();
+      
+      if (response && response.account) {
+        const userEmail = response.account.username;
+        console.log("Connecté en tant que:", userEmail);
+        
+        // Stocke l'email dans le localStorage
+        localStorage.setItem("userEmail", userEmail);
+        
+        // Redirige vers le dashboard
+        window.location.href = "manager_dashboard.html";
+      } else {
+        console.log("Pas encore connecté.");
+      }
+    }
+
+    function showLoading() {
+      document.getElementById('loadingOverlay').classList.remove('hidden');
+    }
+
+    function hideLoading() {
+      document.getElementById('loadingOverlay').classList.add('hidden');
+    }
+
+    function showError(message) {
+      alert(message); // Dans une vraie application, vous utiliseriez un toast ou une modal plus élégante
+    }
+  </script>
+</body>
+</html>

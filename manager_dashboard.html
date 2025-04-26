@@ -1,0 +1,1609 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion des Objectifs - ORBIS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .progress-bar {
+            height: 10px;
+            border-radius: 5px;
+            background-color: #e5e7eb;
+
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+        .achievement-level {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .achievement-level:hover {
+            transform: scale(1.05);
+        }
+        .achievement-level.selected {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+        }
+        .objective-item {
+            transition: all 0.3s ease;
+        }
+        .objective-item:hover {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .print-only {
+            display: none;
+        }
+        @media print {
+            .no-print {
+                display: none;
+            }
+            .print-only {
+                display: block;
+            }
+            body {
+                background: white;
+                color: black;
+            }
+            .container {
+                max-width: 100%;
+                padding: 0;
+            }
+        }
+        .sidebar {
+            transition: all 0.3s ease;
+        }
+        .sidebar-collapsed {
+            transform: translateX(-100%);
+        }
+        .sidebar-toggle {
+            transition: all 0.3s ease;
+        }
+        .sidebar-toggle.collapsed {
+            transform: rotate(180deg);
+        }
+        .objective-exceptionnel {
+            border-left: 4px solid #8b5cf6;
+            background-color: #f5f3ff;
+        }
+        .weight-warning {
+            border-color: #f59e0b;
+            background-color: #fffbeb;
+        }
+       
+    </style>
+    
+ <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <div class="flex">
+        <!-- Sidebar -->
+        <div id="sidebar" class="sidebar w-64 bg-blue-800 text-white min-h-screen fixed z-10">
+            <div class="p-4 flex items-center justify-between border-b border-blue-700">
+                <h2 class="text-xl font-bold">RH ORBIS</h2>
+                <button id="sidebar-toggle" class="sidebar-toggle text-white focus:outline-none">
+                    
+                </button>
+            </div>
+            <div class="p-4">
+                <div class="mb-6">
+                    <h3 class="text-sm uppercase font-semibold text-blue-300 mb-2">Navigation</h3>
+                    <ul>
+                        <li class="mb-1">
+                            <button id="nav-new" class="w-full text-left px-3 py-2 rounded-md bg-blue-700 flex items-center">
+                                <i class="fas fa-plus-circle mr-2"></i> Nouvelle Évaluation
+                            </button>
+                        </li>
+                        <li class="mb-1">
+                            <button id="nav-saved" class="w-full text-left px-3 py-2 rounded-md hover:bg-blue-700 flex items-center">
+                                <i class="fas fa-folder-open mr-2"></i> Évaluations Sauvegardées
+                            </button>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div id="main-content" class="flex-1 ml-64 transition-all duration-300">
+            <div class="container mx-auto px-4 py-8">
+                <div class="max-w-5xl mx-auto">
+                    <!-- Header -->
+                    <header class="mb-8 text-center">
+                        <div class="flex justify-center mb-4">
+                            <div class="bg-blue-100 p-4 rounded-full">
+                                <i class="fas fa-chart-line text-blue-600 text-3xl"></i>
+                            </div>
+                        </div>
+                        <h1 class="text-3xl font-bold text-blue-800 mb-2">Système d'Évaluation des Performances</h1>
+                        <h1 class="text-3xl font-bold text-blue-800 mb-2">Groupe ORBIS</h1>
+                        <p class="text-gray-600" id="page-subtitle">Définissez les objectifs et évaluez les collaborateurs</p>
+                        <div class="mt-4 print-only">
+                            <p class="text-sm text-gray-500">Généré le <span id="print-date"></span></p>
+                        </div>
+                    </header>
+
+                    <!-- User Input Section -->
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="manager-name" class="block text-gray-700 mb-2 font-medium">
+                                    <i class="fas fa-user-tie mr-2 text-blue-500"></i>Nom et Prénom de l'évaluateur (N+1)
+                                </label>
+                                <input type="text" id="manager-name" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Entrez votre nom et prénom">
+                            </div>
+                            <div>
+                                <label for="collaborateur-name" class="block text-gray-700 mb-2 font-medium">
+                                    <i class="fas fa-user mr-2 text-blue-500"></i>Nom du collaborateur
+                                </label>
+                                <input type="text" id="collaborateur-name" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Entrez le nom du collaborateur">
+                            </div>
+                            <div>
+                                <label for="collaborateur-societe" class="block text-gray-700 mb-2 font-medium">
+                                    <i class="fas fa-building mr-2 text-blue-500"></i>Société du collaborateur
+                                </label>
+                                <input type="text" id="collaborateur-societe" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Entrez la société du collaborateur">
+                            </div>
+                            <div>
+                                <label for="evaluation-date" class="block text-gray-700 mb-2 font-medium">
+                                    <i class="fas fa-calendar-alt mr-2 text-blue-500"></i>Date d'évaluation
+                                </label>
+                                <input type="date" id="evaluation-date" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Content -->
+                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
+                        <!-- Tabs -->
+                        <div class="flex border-b no-print">
+                            <button id="objectives-tab" class="flex-1 py-4 px-6 font-medium text-center border-b-2 border-blue-500 text-blue-600 bg-blue-50">
+                                <i class="fas fa-bullseye mr-2"></i>Objectifs
+                            </button>
+                            <button id="evaluation-tab" class="flex-1 py-4 px-6 font-medium text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-user-check mr-2"></i>Évaluation
+                            </button>
+                            <button id="results-tab" class="flex-1 py-4 px-6 font-medium text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-chart-bar mr-2"></i>Résultats
+                            </button>
+                        </div>
+ 
+                        <!-- Objectives Tab Content -->
+                        <div id="objectives-content" class="p-6">
+                            <div class="mb-6">
+                                <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                                    <i class="fas fa-bullseye mr-2 text-blue-500"></i>Définir les Objectifs
+                                </h2>
+                                <p class="text-gray-600 mb-4">Ajoutez entre 3 et 6 objectifs avec leur poids et mesures. Vous pouvez ajouter des obtif exceptionnel facultatif (max 10%).</p>
+                                
+                                <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 pt-1">
+                                            <i class="fas fa-info-circle text-blue-500"></i>
+                                        </div>
+                                        <div class="ml-3">
+                                            <h3 class="text-sm font-medium text-blue-800">Conseils pour définir vos objectifs</h3>
+                                            <div class="mt-2 text-sm text-blue-700">
+                                                <p>• Les objectifs doivent être SMART (Spécifiques, Mesurables, Atteignables, Réalistes, Temporellement définis)</p>
+                                                <p>• Répartissez équitablement les poids entre les objectifs (total = 100%)</p>
+                                                <p>• Définissez des mesures claires pour chaque niveau d'atteinte</p>
+                                                <p>• L'objectif exceptionnel est facultatif et limité à 10% du poids total</p>
+                                                <p>• Avec les deux objectif exceptionnel, le poids total peut atteindre 120%</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div id="objectives-container">
+                                    <!-- Objectives will be added here -->
+                                </div>
+                                
+                                <div class="flex justify-between mt-6 no-print">
+                                    <div>
+                                        <button id="add-objective" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center transition-all mr-2">
+                                            <i class="fas fa-plus mr-2"></i> Ajouter un Objectif
+                                        </button>
+                                        <button id="add-exceptional" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md flex items-center transition-all">
+                                            <i class="fas fa-star mr-2"></i> Objectif Exceptionnel
+                                        </button>
+                                    </div>
+                                    <div>
+                                        <button id="reset-objectives" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md flex items-center mr-2 transition-all">
+                                            <i class="fas fa-redo mr-2"></i> Réinitialiser
+                                        </button>
+                                        <button id="save-objectives" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md flex items-center transition-all">
+                                            <i class="fas fa-save mr-2"></i> Enregistrer
+                                        </button>
+                                        <button id="send-objectives-rh" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center transition-all">
+                                       <i class="fas fa-paper-plane mr-2"></i> Envoyer Objectifs au RH
+                                      </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Weight summary -->
+                                <div id="weight-summary" class="mt-4 p-3 border rounded-md hidden">
+                                    <div class="flex justify-between items-center">
+                                        <div>
+                                            <span class="font-medium">Poids total:</span>
+                                            <span id="total-weight" class="ml-2">0%</span>
+                                        </div>
+                                        <div id="weight-status" class="text-sm">
+                                            <!-- Status message will appear here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Evaluation Tab Content -->
+                        <div id="evaluation-content" class="p-6 hidden">
+                            <div class="mb-6">
+                                <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                                    <i class="fas fa-user-check mr-2 text-blue-500"></i>Évaluer le Collaborateur
+                                </h2>
+                                <p class="text-gray-600 mb-4">Sélectionnez le niveau d'atteinte pour chaque objectif.</p>
+                                
+                                <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6">
+                                    <div class="flex items-start">
+                                        <div class="flex-shrink-0 pt-1">
+                                            <i class="fas fa-exclamation-circle text-yellow-500"></i>
+                                        </div>
+                                        <div class="ml-3">
+                                            <h3 class="text-sm font-medium text-yellow-800">Comment évaluer ?</h3>
+                                            <div class="mt-2 text-sm text-yellow-700">
+                                                <p>• Sélectionnez le niveau d'atteinte qui correspond le mieux aux résultats du collaborateur : </p>
+                                                   <p>• Objectif non atteint : Moins de 25 % de l’objectif réalisé. Aucun résultat concret ou écart significatif par rapport aux attentes.</p>
+                                                   <p>• Avancement limité : Entre 25 % et 49 % des résultats attendus atteints. Des efforts sont constatés, mais des écarts importants subsistent.</p>
+                                                   <p>• Réalisation incomplète : Entre 50 % et 74 % des résultats attendus atteints. Résultats tangibles mais incomplets ; certains axes d’amélioration demeurent.</p>
+                                                   <p>• Résultat satisfaisant : Entre 75 % et 99 % des résultats attendus réalisés. L’objectif est atteint avec de bonnes performances, mais il reste un léger écart par rapport à l’excellence.</p>
+                                                   <p>• Objectif atteint : 100 % ou plus des résultats attendus réalisés, avec un dépassement significatif. Les performances surpassent les attentes et créent un impact notable.</p>
+                                                <p>• Indiquez la valeur réelle obtenue pour chaque objective</p>
+                                                <p>• Le système calculera automatiquement le score final</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div id="evaluation-container">
+                                    <!-- Evaluation items will be added here -->
+                                </div>
+                                
+                                <div class="flex justify-end mt-6 no-print">
+                                    <button id="calculate-score" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md flex items-center transition-all">
+                                        <i class="fas fa-calculator mr-2"></i> Calculer le Score
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Results Tab Content -->
+                        <div id="results-content" class="p-6 hidden">
+                            <div class="mb-6">
+                                <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                                    <i class="fas fa-chart-bar mr-2 text-blue-500"></i>Résultats de l'Évaluation
+                                </h2>
+                                
+                                <div id="results-summary" class="bg-gray-50 p-6 rounded-md mb-6 border border-gray-200">
+                                    <!-- Results summary will be shown here -->
+                                </div>
+                                
+                                <div id="results-details">
+                                    <!-- Detailed results will be shown here -->
+                                </div>
+
+                                <!-- Skills Analysis Section -->
+                                <div id="skills-analysis" class="bg-white rounded-lg shadow-md p-6 mb-6">
+                                    <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                                        <i class="fas fa-tasks mr-2 text-blue-500"></i>Analyse des Compétences
+                                    </h2>
+                                    
+                                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                        <div>
+                                            <label class="block text-gray-700 mb-2 font-medium">
+                                                <i class="fas fa-thumbs-up mr-2 text-green-500"></i>Points Forts du Collaborateur
+                                            </label>
+                                            <textarea id="strengths" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4" placeholder="Décrivez les points forts du collaborateur..."></textarea>
+                                        </div>
+                                        <div>
+                                            <label class="block text-gray-700 mb-2 font-medium">
+                                                <i class="fas fa-thumbs-down mr-2 text-red-500"></i>Points Faibles / Axes d'Amélioration
+                                            </label>
+                                            <textarea id="weaknesses" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4 placeholder="Décrivez les points faibles ou axes d'amélioration..."></textarea>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-6">
+                                        <label class="block text-gray-700 mb-2 font-medium">
+                                            <i class="fas fa-graduation-cap mr-2 text-purple-500"></i>Formations Proposées
+                                        </label>
+                                        <textarea id="training-proposals" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4" placeholder="Listez les formations proposées pour améliorer les compétences..."></textarea>
+                                    </div>
+                                    
+                                    <div class="flex justify-between items-center">
+                                        <div class="text-sm text-gray-500">
+                                            <i class="fas fa-info-circle mr-1"></i> Cette analyse complète l'évaluation des objectifs
+                                        </div>
+                                        <button id="save-analysis" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center transition-all">
+                                            <i class="fas fa-save mr-2"></i> Enregistrer l'Analyse
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex justify-end mt-6 no-print">
+                                    <button id="new-evaluation" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md flex items-center mr-2 transition-all">
+                                        <i class="fas fa-redo mr-2"></i> Nouvelle Évaluation
+                                    </button>
+                                
+                                    <button id="print-results" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center transition-all">
+                                        <i class="fas fa-print mr-2"></i> Imprimer
+                                    </button>
+                                    <button id="share-rh" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center">
+                                    <i class="fas fa-paper-plane mr-2"></i> Partager avec RH
+                                       </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Evaluations Modal -->
+    <div id="saved-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] overflow-hidden">
+            <div class="flex justify-between items-center border-b p-4">
+                <h3 class="text-xl font-semibold text-gray-800">Évaluations Sauvegardées</h3>
+                <button id="close-saved-modal" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto">
+                <div class="mb-4">
+                    <input type="text" id="search-saved" placeholder="Rechercher un collaborateur..." class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                </div>
+                <div id="saved-list" class="space-y-3">
+                    <!-- Saved evaluations will be listed here -->
+                </div>
+            </div>
+            <div class="border-t p-4 flex justify-end">
+                <button id="cancel-saved-modal" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
+                    Fermer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set print date
+            const now = new Date();
+            document.getElementById('print-date').textContent = now.toLocaleDateString('fr-FR', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            // Set default evaluation date to today
+            document.getElementById('evaluation-date').valueAsDate = new Date();
+            // Sidebar toggle functionality
+            const sidebar = document.getElementById('sidebar');
+            const sidebarToggle = document.getElementById('sidebar-toggle');
+            const mainContent = document.getElementById('main-content');
+            sidebarToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('sidebar-collapsed');
+                mainContent.classList.toggle('ml-64');
+                mainContent.classList.toggle('ml-0');
+                sidebarToggle.classList.toggle('collapsed');
+            });
+            // Navigation buttons
+            document.getElementById('nav-new').addEventListener('click', function() {
+                resetForm();
+                document.getElementById('page-subtitle').textContent = 'Définissez les objectifs et évaluez les collaborateurs';
+            });
+            document.getElementById('nav-saved').addEventListener('click', showSavedEvaluations);
+            // Saved evaluations modal
+            const savedModal = document.getElementById('saved-modal');
+            const closeSavedModal = document.getElementById('close-saved-modal');
+            const cancelSavedModal = document.getElementById('cancel-saved-modal');
+            function showSavedEvaluations() {
+                savedModal.classList.remove('hidden');
+                renderSavedEvaluations();
+            }
+            function hideSavedEvaluations() {
+                savedModal.classList.add('hidden');
+            }
+            closeSavedModal.addEventListener('click', hideSavedEvaluations);
+            cancelSavedModal.addEventListener('click', hideSavedEvaluations);
+            // Search functionality for saved evaluations
+            document.getElementById('search-saved').addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase();
+                const items = document.querySelectorAll('#saved-list > div');
+                
+                items.forEach(item => {
+                    const text = item.textContent.toLowerCase();
+                    if (text.includes(searchTerm)) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+            // Local storage for saved evaluations
+            function saveEvaluationToLocalStorage() {
+    const managerName = document.getElementById('manager-name').value;
+    const employeeName = document.getElementById('collaborateur-name').value;
+    const company = document.getElementById('collaborateur-societe').value;
+    const date = document.getElementById('evaluation-date').value;
+
+    if (!managerName || !employeeName || !company || !date) {
+        showAlert('Veuillez remplir tous les champs avant de sauvegarder.', 'error');
+        return;
+    }
+
+    // Collecter tous les objectifs
+    const objectives = [];
+    document.querySelectorAll('.objective-item').forEach(item => {
+        const description = item.querySelector('.objective-description').value;
+        const weight = parseInt(item.querySelector('.objective-weight').value || '0');
+        const isExceptional = item.classList.contains('objective-exceptionnel');
+
+        if (!description || !weight) {
+            showAlert('Veuillez remplir tous les champs pour chaque objectif.', 'error');
+            return;
+        }
+
+        if (isExceptional) {
+            // Enregistrer uniquement la description et le poids pour les objectifs exceptionnels
+            objectives.push({
+                id: item.dataset.id || Date.now().toString() + Math.random(),
+                description,
+                weight,
+                isExceptional
+            });
+        } else {
+            // Enregistrer toutes les mesures pour les objectifs standards
+            const floor = item.querySelector('.objective-floor').value;
+            const satisfactory = item.querySelector('.objective-satisfactory').value;
+            const goodPerformance = item.querySelector('.objective-goodPerformance').value;
+            const target = item.querySelector('.objective-target').value;
+
+            if (!floor || !satisfactory || !goodPerformance || !target) {
+                showAlert('Veuillez remplir tous les champs pour chaque objectif standard.', 'error');
+                return;
+            }
+
+            objectives.push({
+                id: item.dataset.id || Date.now().toString() + Math.random(),
+                description,
+                weight,
+                floor,
+                satisfactory,
+                goodPerformance,
+                target,
+                isExceptional
+            });
+        }
+    });
+
+    console.log('Objectifs collectés :', objectives);
+
+    // Vérification des objectifs standards et exceptionnels
+    const standardObjectives = objectives.filter(obj => !obj.isExceptional);
+    const exceptionalObjectives = objectives.filter(obj => obj.isExceptional);
+
+    if (standardObjectives.length < 3) {
+        showAlert('Vous devez définir entre 3 et 6 objectifs standards.', 'error');
+        return;
+    }
+
+    if (standardObjectives.length > 6) {
+        showAlert('Vous ne pouvez pas avoir plus de 6 objectifs standards.', 'error');
+        return;
+    }
+
+    if (exceptionalObjectives.length > 2) {
+        showAlert('Vous ne pouvez pas avoir plus de 2 objectifs exceptionnels.', 'error');
+        return;
+    }
+
+    // Vérification du poids total
+    const maxAllowedWeight = exceptionalObjectives.length === 2 ? 120 : exceptionalObjectives.length === 1 ? 110 : 100;
+    const totalWeight = objectives.reduce((sum, obj) => sum + obj.weight, 0);
+
+    if (totalWeight > maxAllowedWeight) {
+        showAlert(`Le poids total des objectifs ne peut pas dépasser ${maxAllowedWeight}%.`, 'error');
+        return;
+    }
+
+    // Sauvegarder l'évaluation
+    const evaluation = {
+        id: Date.now(),
+        managerName,
+        employeeName,
+        company,
+        date,
+        objectives,
+        strengths: document.getElementById('strengths').value || '',
+        weaknesses: document.getElementById('weaknesses').value || '',
+        trainingProposals: document.getElementById('training-proposals').value || '',
+        status: 'saved'
+    };
+
+    let savedEvaluations = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
+
+    // Vérifier si une évaluation avec le même ID existe déjà
+    const existingIndex = savedEvaluations.findIndex(e => e.id === evaluation.id);
+    if (existingIndex !== -1) {
+        // Remplacer l'évaluation existante
+        savedEvaluations[existingIndex] = evaluation;
+        showAlert('Évaluation mise à jour avec succès!', 'success');
+    } else {
+        // Ajouter une nouvelle évaluation
+        savedEvaluations.push(evaluation);
+        showAlert('Évaluation sauvegardée avec succès!', 'success');
+    }
+
+    localStorage.setItem('savedEvaluations', JSON.stringify(savedEvaluations));
+    renderSavedEvaluations();
+}
+            function renderSavedEvaluations() {
+                const savedList = document.getElementById('saved-list');
+                if (!savedList) return;
+                const savedEvaluations = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
+                savedList.innerHTML = '';
+                if (savedEvaluations.length === 0) {
+                    savedList.innerHTML = `
+                        <div class="text-center py-8 text-gray-500">
+                            <i class="fas fa-folder-open text-4xl mb-2"></i>
+                            <p>Aucune évaluation sauvegardée</p>
+                        </div>
+                    `;
+                    return;
+                }
+                savedEvaluations.forEach(evaluation => {
+                    const evaluationElement = document.createElement('div');
+                    evaluationElement.className = 'border rounded-md p-4 hover:bg-gray-50 cursor-pointer transition-colors';
+                    evaluationElement.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h4 class="font-medium text-gray-800">${evaluation.employeeName}</h4>
+                                <p class="text-sm text-gray-500">${evaluation.company}</p>
+                                <p class="text-xs text-gray-400 mt-1">Défini par ${evaluation.managerName} le ${new Date(evaluation.date).toLocaleDateString('fr-FR')}</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="load-evaluation px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600" data-id="${evaluation.id}">
+                                    <i class="fas fa-edit mr-1"></i> ${evaluation.status === 'completed' ? 'Voir' : 'Évaluer'}
+                                </button>
+                                <button class="delete-evaluation px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600" data-id="${evaluation.id}">
+                                    <i class="fas fa-trash mr-1"></i> Supprimer
+                                </button>
+                            </div>
+                        </div>
+                        <div class="mt-2">
+                            <span class="inline-block px-2 py-1 rounded-full text-xs font-medium ${evaluation.status === 'saved' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">
+                                ${evaluation.status === 'saved' ? 'En attente d\'évaluation' : 'Évaluation terminée'}
+                            </span>
+                            ${evaluation.status === 'completed' ? `<span class="inline-block ml-2 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Score: ${evaluation.totalScore?.toFixed(1) || 'N/A'}%</span>` : ''}
+                        </div>
+                    `;
+                    savedList.appendChild(evaluationElement);
+                    // Add event listeners to buttons
+                    evaluationElement.querySelector('.load-evaluation').addEventListener('click', function() {
+                        loadEvaluation(evaluation.id);
+                        hideSavedEvaluations();
+                    });
+                    
+                    evaluationElement.querySelector('.delete-evaluation').addEventListener('click', function() {
+                        if (confirm('Êtes-vous sûr de vouloir supprimer cette évaluation ?')) {
+                            deleteEvaluation(evaluation.id);
+                            renderSavedEvaluations();
+                        }
+                    });
+                });
+            }
+            function loadEvaluation(id) {
+    const savedEvaluations = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
+    const evaluation = savedEvaluations.find(e => e.id == id);
+
+    if (!evaluation) {
+        showAlert('Évaluation non trouvée.', 'error');
+        return;
+    }
+
+    // Remplir les champs du formulaire
+    document.getElementById('manager-name').value = evaluation.managerName;
+    document.getElementById('collaborateur-name').value = evaluation.employeeName;
+    document.getElementById('collaborateur-societe').value = evaluation.company;
+    document.getElementById('evaluation-date').value = evaluation.date;
+
+    // Remplir l'analyse des compétences
+    document.getElementById('strengths').value = evaluation.strengths || '';
+    document.getElementById('weaknesses').value = evaluation.weaknesses || '';
+    document.getElementById('training-proposals').value = evaluation.trainingProposals || '';
+
+    // Charger les objectifs
+    objectives = [...evaluation.objectives];
+    renderObjectives(); // Affiche les objectifs dans le formulaire pour modification
+
+    // Si l'évaluation est terminée, charger les résultats
+    if (evaluation.status === 'completed') {
+        evaluationResults = evaluation.results || [];
+        totalScore = evaluation.totalScore || 0;
+        renderResults(evaluation.employeeName, evaluation.managerName, totalScore);
+        resultsTab.click();
+    } else {
+        // Mettre à jour l'interface utilisateur
+        document.getElementById('page-subtitle').textContent = `Évaluation en cours pour ${evaluation.employeeName}`;
+        objectivesTab.click();
+    }
+
+    showAlert('Évaluation chargée avec succès! Vous pouvez modifier les objectifs.', 'success');
+}
+
+            function deleteEvaluation(id) {
+                let savedEvaluations = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
+                savedEvaluations = savedEvaluations.filter(e => e.id != id);
+                localStorage.setItem('savedEvaluations', JSON.stringify(savedEvaluations));
+                
+                showAlert('Évaluation supprimée avec succès.', 'success');
+            }
+            function resetForm() {
+                document.getElementById('manager-name').value = '';
+                document.getElementById('collaborateur-name').value = '';
+                document.getElementById('collaborateur-societe').value = '';
+                document.getElementById('evaluation-date').valueAsDate = new Date();
+                
+                // Reset skills analysis
+                document.getElementById('strengths').value = '';
+                document.getElementById('weaknesses').value = '';
+                document.getElementById('training-proposals').value = '';
+                
+                objectives = [];
+                objectivesContainer.innerHTML = '';
+                addObjective();
+                
+                document.getElementById('page-subtitle').textContent = 'Définissez les objectifs et évaluez les collaborateurs';
+                objectivesTab.click();
+                // Hide weight summary
+                document.getElementById('weight-summary').classList.add('hidden');
+            }
+            // Tab switching functionality
+            const objectivesTab = document.getElementById('objectives-tab');
+            const evaluationTab = document.getElementById('evaluation-tab');
+            const resultsTab = document.getElementById('results-tab');
+            
+            const objectivesContent = document.getElementById('objectives-content');
+            const evaluationContent = document.getElementById('evaluation-content');
+            const resultsContent = document.getElementById('results-content');
+            
+            objectivesTab.addEventListener('click', () => {
+                objectivesTab.classList.add('border-blue-500', 'text-blue-600', 'bg-blue-50');
+                objectivesTab.classList.remove('border-transparent', 'text-gray-500', 'bg-white');
+                
+                evaluationTab.classList.add('border-transparent', 'text-gray-500', 'bg-white');
+                evaluationTab.classList.remove('border-blue-500', 'text-blue-600', 'bg-blue-50');
+                
+                resultsTab.classList.add('border-transparent', 'text-gray-500', 'bg-white');
+                resultsTab.classList.remove('border-blue-500', 'text-blue-600', 'bg-blue-50');
+                
+                objectivesContent.classList.remove('hidden');
+                evaluationContent.classList.add('hidden');
+                resultsContent.classList.add('hidden');
+            });
+            
+            evaluationTab.addEventListener('click', () => {
+                const managerName = document.getElementById('manager-name').value;
+                if (!managerName) {
+                    showAlert('Veuillez entrer le nom du manager.', 'error');
+                    return;
+                }
+                
+                // Vérification du nombre d'objectifs
+                const objectiveItems = document.querySelectorAll('.objective-item:not(.objective-exceptionnel)');
+                if (objectiveItems.length < 1) {
+                    showAlert('Vous devez définir au moins un objectif avant de passer à l\'évaluation.', 'error');
+                    return;
+                }
+                
+                // Vérification que tous les champs des objectifs sont remplis
+                let allFieldsFilled = true;
+                document.querySelectorAll('.objective-item').forEach(item => {
+                    const description = item.querySelector('.objective-description').value;
+                    const weight = item.querySelector('.objective-weight').value;
+                    const floor = item.querySelector('.objective-floor').value;
+                    const Satisfactory = item.querySelector('.objective-satisfactory').value;
+                    const GoodPerformance = item.querySelector('.objective-goodPerformance').value;
+                    const target = item.querySelector('.objective-target').value;
+                   
+                    
+                    if (!description || !weight || !floor || !Satisfactory || !GoodPerformance || !target) {
+                        allFieldsFilled = false;
+                    }
+                });
+                
+                if (!allFieldsFilled) {
+                    showAlert('Veuillez remplir tous les champs pour chaque objectif avant de passer à l\'évaluation.', 'error');
+                    return;
+                }
+                
+                evaluationTab.classList.add('border-blue-500', 'text-blue-600', 'bg-blue-50');
+                evaluationTab.classList.remove('border-transparent', 'text-gray-500', 'bg-white');
+                
+                objectivesTab.classList.add('border-transparent', 'text-gray-500', 'bg-white');
+                objectivesTab.classList.remove('border-blue-500', 'text-blue-600', 'bg-blue-50');
+                
+                resultsTab.classList.add('border-transparent', 'text-gray-500', 'bg-white');
+                resultsTab.classList.remove('border-blue-500', 'text-blue-600', 'bg-blue-50');
+                
+                evaluationContent.classList.remove('hidden');
+                objectivesContent.classList.add('hidden');
+                resultsContent.classList.add('hidden');
+                
+                renderEvaluationItems();
+            });
+            
+            resultsTab.addEventListener('click', () => {
+                resultsTab.classList.add('border-blue-500', 'text-blue-600', 'bg-blue-50');
+                resultsTab.classList.remove('border-transparent', 'text-gray-500', 'bg-white');
+                
+                objectivesTab.classList.add('border-transparent', 'text-gray-500', 'bg-white');
+                objectivesTab.classList.remove('border-blue-500', 'text-blue-600', 'bg-blue-50');
+                
+                evaluationTab.classList.add('border-transparent', 'text-gray-500', 'bg-white');
+                evaluationTab.classList.remove('border-blue-500', 'text-blue-600', 'bg-blue-50');
+                
+                resultsContent.classList.remove('hidden');
+                objectivesContent.classList.add('hidden');
+                evaluationContent.classList.add('hidden');
+            });
+            
+            // Show alert function
+            function showAlert(message, type) {
+                const alertDiv = document.createElement('div');
+                alertDiv.className = `fixed top-4 right-4 p-4 rounded-md shadow-lg z-50 fade-in ${
+                    type === 'error' ? 'bg-red-100 border-l-4 border-red-500 text-red-700' : 
+                    type === 'info' ? 'bg-blue-100 border-l-4 border-blue-500 text-blue-700' :
+                    'bg-green-100 border-l-4 border-green-500 text-green-700'
+                }`;
+                alertDiv.innerHTML = `
+                    <div class="flex items-center">
+                        <div class="flex-shrink-0">
+                            <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : type === 'info' ? 'fa-info-circle' : 'fa-check-circle'} mr-2"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium">${type === 'error' ? 'Erreur' : type === 'info' ? 'Information' : 'Succès'}</p>
+                            <p>${message}</p>
+                        </div>
+                        <button class="ml-4 text-gray-500 hover:text-gray-700" onclick="this.parentElement.parentElement.remove()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                `;
+                document.body.appendChild(alertDiv);
+                
+                setTimeout(() => {
+                    alertDiv.remove();
+                }, 5000);
+            }
+            // Objectives management
+            let objectives = [];
+            let evaluationResults = [];
+            let totalScore = 0;
+            
+            const objectivesContainer = document.getElementById('objectives-container');
+            const addObjectiveBtn = document.getElementById('add-objective');
+            const addExceptionalBtn = document.getElementById('add-exceptional');
+            const saveObjectivesBtn = document.getElementById('save-objectives');
+            const resetObjectivesBtn = document.getElementById('reset-objectives');
+            const weightSummary = document.getElementById('weight-summary');
+            const totalWeightSpan = document.getElementById('total-weight');
+            const weightStatus = document.getElementById('weight-status');
+            
+            addObjectiveBtn.addEventListener('click', addObjective);
+            addExceptionalBtn.addEventListener('click', addExceptionalObjective);
+            saveObjectivesBtn.addEventListener('click', saveEvaluationToLocalStorage);
+            resetObjectivesBtn.addEventListener('click', resetObjectives);
+              // Function to calculate and display total weight
+              function updateTotalWeight() {
+    const exceptionalObjectives = document.querySelectorAll('.objective-exceptionnel');
+    const maxAllowedWeight = exceptionalObjectives.length === 2 ? 120 : exceptionalObjectives.length === 1 ? 110 : 100;
+
+    const totalWeight = Array.from(document.querySelectorAll('.objective-item')).reduce((sum, item) => {
+        return sum + parseInt(item.querySelector('.objective-weight').value || 0);
+    }, 0);
+
+    totalWeightSpan.textContent = `${totalWeight}%`;
+
+    // Show/hide weight summary
+    if (document.querySelectorAll('.objective-item').length > 0) {
+        weightSummary.classList.remove('hidden');
+    } else {
+        weightSummary.classList.add('hidden');
+    }
+
+    // Update status message and styling
+    if (totalWeight > maxAllowedWeight) {
+        weightSummary.classList.add('weight-warning');
+        weightStatus.innerHTML = `<span class="text-red-500"><i class="fas fa-exclamation-circle mr-1"></i>Dépassement de ${totalWeight - maxAllowedWeight}% (max ${maxAllowedWeight}%)</span>`;
+    } else if (totalWeight < maxAllowedWeight) {
+        weightSummary.classList.remove('weight-warning');
+        weightStatus.innerHTML = `<span class="text-yellow-500"><i class="fas fa-info-circle mr-1"></i>Il reste ${maxAllowedWeight - totalWeight}% à attribuer</span>`;
+    } else {
+        weightSummary.classList.remove('weight-warning');
+        weightStatus.innerHTML = `<span class="text-green-500"><i class="fas fa-check-circle mr-1"></i>Poids total correct (${maxAllowedWeight}%)</span>`;
+    }
+}
+            
+            // Add event listeners to all weight inputs
+            function setupWeightInputListeners() {
+                document.querySelectorAll('.objective-weight').forEach(input => {
+                    input.addEventListener('input', updateTotalWeight);
+                });
+            }
+            
+            function updateObjectiveNumbers() {
+                const objectiveItems = document.querySelectorAll('.objective-item:not(.objective-exceptionnel)');
+                objectiveItems.forEach((item, index) => {
+                    const title = item.querySelector('h3');
+                    if (title) {
+                        title.innerHTML = `<i class="fas fa-bullseye mr-2 text-blue-500"></i>Objectif ${index + 1}`;
+                    }
+                });
+                
+                const exceptionalObjective = document.querySelector('.objective-exceptionnel');
+                if (exceptionalObjective) {
+                    const title = exceptionalObjective.querySelector('h3');
+                    if (title) {
+                        title.innerHTML = `<i class="fas fa-star mr-2 text-purple-500"></i>Objectif Exceptionnel`;
+                    }
+                }
+                
+                // Update total weight display
+                updateTotalWeight();
+            }
+            
+            function addObjective() {
+                const objectiveItems = document.querySelectorAll('.objective-item:not(.objective-exceptionnel)');
+                if (objectiveItems.length >= 6) {
+                    showAlert('Vous ne pouvez pas ajouter plus de 6 objectifs.', 'error');
+                    return;
+                }
+                
+                const objectiveId = Date.now();
+                
+                const objectiveElement = document.createElement('div');
+                objectiveElement.className = 'objective-item mb-6 p-4 border rounded-md bg-gray-50 fade-in';
+                objectiveElement.dataset.id = objectiveId;
+                
+                objectiveElement.innerHTML = `
+                    <div class="flex justify-between items-center mb-3">
+                        <h3 class="font-medium text-gray-700 flex items-center">
+                            <i class="fas fa-bullseye mr-2 text-blue-500"></i>Objectif ${objectiveItems.length + 1}
+                        </h3>
+                        <button class="delete-objective text-red-500 hover:text-red-700 transition-colors">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-gray-700 mb-1">Description de l'objectif</label>
+                        <input type="text" class="objective-description w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Décrivez l'objectif">
+                    </div>
+                    <div class="mb-3">
+                        <label class="block text-gray-700 mb-1">Poids (%)</label>
+                        <div class="relative">
+                            <input type="number" min="1" max="100" class="objective-weight w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="10">
+                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                <span class="text-gray-500">%</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                        <div>
+                            <label class="block text-gray-700 mb-1">Seuil de départ </label>
+                            <input type="text" class="objective-floor w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 0 ventes">
+                        </div>
+                        <div>
+                            <label class="block text-gray-700 mb-1">Satisfaisant </label>
+                            <input type="text" class="objective-satisfactory w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 25 ventes">
+                        </div>
+                       
+                        <div>
+                            <label class="block text-gray-700 mb-1">Bonnes performances </label>
+                            <input type="text" class="objective-goodPerformance w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 50 ventes">
+                        </div>
+
+                         <div>
+                            <label class="block text-gray-700 mb-1">Cible </label>
+                            <input type="text" class="objective-target w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 100 ventes">
+                        </div>
+                    </div>
+                `;
+                
+                objectivesContainer.appendChild(objectiveElement);
+                
+                // Add delete event listener
+                const deleteBtn = objectiveElement.querySelector('.delete-objective');
+                deleteBtn.addEventListener('click', () => {
+                    if (objectivesContainer.children.length <= 1) {
+                        showAlert('Vous devez avoir au moins 1 objectif.', 'error');
+                        return;
+                    }
+                    objectiveElement.remove();
+                    // Update numbers for remaining objectives
+                    updateObjectiveNumbers();
+                });
+                
+                // Add weight input listener
+                objectiveElement.querySelector('.objective-weight').addEventListener('input', updateTotalWeight);
+                
+                // Update numbers
+                updateObjectiveNumbers();
+            }
+            
+            function addExceptionalObjective() {
+    // Vérifier si deux objectifs exceptionnels existent déjà
+    const exceptionalObjectives = document.querySelectorAll('.objective-exceptionnel');
+    if (exceptionalObjectives.length >= 2) {
+        showAlert('Vous ne pouvez pas ajouter plus de 2 objectifs exceptionnels.', 'error');
+        return;
+    }
+
+    const objectiveId = Date.now();
+
+    const objectiveElement = document.createElement('div');
+    objectiveElement.className = 'objective-item objective-exceptionnel mb-6 p-4 border rounded-md bg-gray-50 fade-in';
+    objectiveElement.dataset.id = objectiveId;
+
+    objectiveElement.innerHTML = `
+        <div class="flex justify-between items-center mb-3">
+            <h3 class="font-medium text-gray-700 flex items-center">
+                <i class="fas fa-star mr-2 text-purple-500"></i>Objectif Exceptionnel
+            </h3>
+            <button class="delete-objective text-red-500 hover:text-red-700 transition-colors">
+                <i class="fas fa-trash"></i>
+            </button>
+        </div>
+        <div class="mb-3">
+            <label class="block text-gray-700 mb-1">Description de l'objectif</label>
+            <input type="text" class="objective-description w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Décrivez l'objectif exceptionnel">
+        </div>
+        <div class="mb-3">
+            <label class="block text-gray-700 mb-1">Poids (%) <span class="text-xs text-gray-500">(max 10%)</span></label>
+            <div class="relative">
+                <input type="number" min="1" max="10" class="objective-weight w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="10">
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <span class="text-gray-500">%</span>
+                </div>
+            </div>
+        </div>
+       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+            <div>
+                <label class="block text-gray-700 mb-1">Seuil de départ </label>
+                <input type="text" class="objective-floor w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 0 ventes">
+            </div>
+            <div>
+                <label class="block text-gray-700 mb-1">Satisfaisant </label>
+                <input type="text" class="objective-satisfactory w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 25 ventes">
+            </div>
+            <div>
+                <label class="block text-gray-700 mb-1">Bonnes performances </label>
+                <input type="text" class="objective-goodPerformance w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 50 ventes">
+            </div>
+            <div>
+                <label class="block text-gray-700 mb-1">Cible </label>
+                <input type="text" class="objective-target w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 100 ventes">
+            </div>
+        </div>
+            
+    `;
+
+    objectivesContainer.appendChild(objectiveElement);
+
+    // Ajouter un écouteur pour le bouton de suppression
+    const deleteBtn = objectiveElement.querySelector('.delete-objective');
+    deleteBtn.addEventListener('click', () => {
+        objectiveElement.remove();
+        updateObjectiveNumbers();
+    });
+
+    // Ajouter un écouteur pour le champ de poids
+    objectiveElement.querySelector('.objective-weight').addEventListener('input', updateTotalWeight);
+
+    // Mettre à jour les numéros
+    updateObjectiveNumbers();
+}
+            
+            function resetObjectives() {
+                if (confirm('Êtes-vous sûr de vouloir réinitialiser tous les objectifs ?')) {
+                    objectivesContainer.innerHTML = '';
+                    objectives = [];
+                    // Add 1 default objective
+                    addObjective();
+                    showAlert('Tous les objectifs ont été réinitialisés.', 'success');
+                }
+            }
+            
+            function renderObjectives() {
+                objectivesContainer.innerHTML = '';
+                
+                objectives.forEach((objective, index) => {
+                    const objectiveId = objective.id;
+                    
+                    const objectiveElement = document.createElement('div');
+                    objectiveElement.className = `objective-item mb-6 p-4 border rounded-md bg-gray-50 fade-in ${objective.isExceptional ? 'objective-exceptionnel' : ''}`;
+                    objectiveElement.dataset.id = objectiveId;
+                    
+                    objectiveElement.innerHTML = `
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-medium text-gray-700 flex items-center">
+                                <i class="${objective.isExceptional ? 'fas fa-star mr-2 text-purple-500' : 'fas fa-bullseye mr-2 text-blue-500'}"></i>
+                                ${objective.isExceptional ? 'Objectif Exceptionnel' : `Objectif ${index + 1}`}
+                            </h3>
+                            <button class="delete-objective text-red-500 hover:text-red-700 transition-colors">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-gray-700 mb-1">Description de l'objectif</label>
+                            <input type="text" class="objective-description w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" value="${objective.description}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="block text-gray-700 mb-1">Poids (%) ${objective.isExceptional ? '<span class="text-xs text-gray-500">(max 10%)</span>' : ''}</label>
+                            <div class="relative">
+                                <input type="number" min="1" max="${objective.isExceptional ? '10' : '100'}" class="objective-weight w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" value="${objective.weight}">
+                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                                    <span class="text-gray-500">%</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
+                            <div>
+                                <label class="block text-gray-700 mb-1">Seuil de départ </label>
+                                <input type="text" class="objective-floor w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" value="${objective.floor}">
+                            </div>
+                             <div>
+                                <label class="block text-gray-700 mb-1">Satisfaisant </label>
+                                <input type="text" class="objective-satisfactory w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" value="${objective.satisfactory}">
+                            </div>
+                           
+                            <div>
+                                <label class="block text-gray-700 mb-1">Bonnes performances </label>
+                                <input type="text" class="objective-goodPerformance w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" value="${objective.goodPerformance}">
+                            </div>
+                             <div>
+                                <label class="block text-gray-700 mb-1">Cible </label>
+                                <input type="text" class="objective-target w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" value="${objective.target}">
+                            </div>
+                        </div>
+                    `;
+                    
+                    objectivesContainer.appendChild(objectiveElement);
+                    
+                    // Add delete event listener
+                    const deleteBtn = objectiveElement.querySelector('.delete-objective');
+                    deleteBtn.addEventListener('click', () => {
+                        if (!objective.isExceptional && objectivesContainer.querySelectorAll('.objective-item:not(.objective-exceptionnel)').length <= 1) {
+                            showAlert('Vous devez avoir au moins 1 objectif.', 'error');
+                            return;
+                        }
+                        objectiveElement.remove();
+                        // Update numbers for remaining objectives
+                        updateObjectiveNumbers();
+                    });
+                    
+                    // Add weight input listener
+                    objectiveElement.querySelector('.objective-weight').addEventListener('input', updateTotalWeight);
+                });
+                
+                // Update numbers
+                updateObjectiveNumbers();
+            }
+            
+            // Evaluation functionality
+            const evaluationContainer = document.getElementById('evaluation-container');
+            const calculateScoreBtn = document.getElementById('calculate-score');
+            
+            calculateScoreBtn.addEventListener('click', calculateScore);
+            
+            function renderEvaluationItems() {
+    evaluationContainer.innerHTML = '';
+    
+    objectives.forEach((objective, index) => {
+        const evaluationItem = document.createElement('div');
+        evaluationItem.className = `evaluation-item mb-6 p-4 border rounded-md ${objective.isExceptional ? 'bg-purple-50' : 'bg-white'} fade-in`;
+        evaluationItem.dataset.id = objective.id;
+        
+        evaluationItem.innerHTML = `
+            <div class="mb-3">
+                <h3 class="font-medium text-gray-700 flex items-center">
+                    <i class="${objective.isExceptional ? 'fas fa-star mr-2 text-purple-500' : 'fas fa-bullseye mr-2 text-blue-500'}"></i>
+                    ${objective.isExceptional ? 'Objectif Exceptionnel' : `Objectif ${index + 1}`}: ${objective.description}
+                </h3>
+                <div class="flex flex-wrap items-center text-sm text-gray-500 mt-1">
+                    <span class="mr-3"><span class="font-medium">Poids:</span> ${objective.weight}%</span>
+                    <span class="mr-3"><span class="font-medium">Seuil de départ:</span> ${objective.floor}</span>
+                    <span class="mr-3"><span class="font-medium">Satisfaisant :</span> ${objective.satisfactory}</span>
+                    <span><span class="font-medium">Bonnes performances:</span> ${objective.goodPerformance}</span>
+                    <span class="mr-3"><span class="font-medium">Cible:</span> ${objective.target}</span>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="block text-gray-700 mb-2">Résultat Obtenu</label>
+                <div class="grid grid-cols-1 sm:grid-cols-${objective.isExceptional ? '5' : '5'} gap-2">
+                    <div class="achievement-level text-center p-2 border rounded-md" data-level="0">
+                        <div class="text-xs font-semibold text-red-500">Non Atteint</div>
+                        <div class="text-sm">0%</div>
+                    </div>
+                    <div class="achievement-level text-center p-2 border rounded-md" data-level="25">
+                        <div class="text-xs font-semibold text-orange-500">Avancement limité</div>
+                        <div class="text-sm">25%</div>
+                    </div>
+                    <div class="achievement-level text-center p-2 border rounded-md" data-level="50">
+                        <div class="text-xs font-semibold text-yellow-500">Réalisation incomplète</div>
+                        <div class="text-sm">50%</div>
+                    </div>
+                    <div class="achievement-level text-center p-2 border rounded-md" data-level="75">
+                        <div class="text-xs font-semibold text-blue-500">Résultat satisfaisant</div>
+                        <div class="text-sm">75%</div>
+                    </div>
+                    <div class="achievement-level text-center p-2 border rounded-md" data-level="100">
+                        <div class="text-xs font-semibold text-green-500">Atteint</div>
+                        <div class="text-sm">100%</div>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="block text-gray-700 mb-2">Valeur Réelle Obtenue</label>
+                <input type="text" class="actual-value w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Entrez la valeur réelle (ex: 85 ventes)">
+            </div>
+            <div class="mb-3">
+                <label class="block text-gray-700 mb-2">Commentaires</label>
+                <textarea class="comments w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" rows="2" placeholder="Ajoutez des commentaires sur cet objectif"></textarea>
+            </div>
+        `;
+        
+        evaluationContainer.appendChild(evaluationItem);
+        
+        // Add event listeners for achievement levels
+        const levels = evaluationItem.querySelectorAll('.achievement-level');
+        levels.forEach(level => {
+            level.addEventListener('click', function() {
+                // Remove selected class from all levels in this item
+                levels.forEach(l => l.classList.remove('selected'));
+                
+                // Add selected class to clicked level
+                this.classList.add('selected');
+            });
+        });
+    });
+}
+            
+            function calculateScore() {
+                const employeeName = document.getElementById('collaborateur-name').value;
+                const managerName = document.getElementById('manager-name').value;
+                const company = document.getElementById('collaborateur-societe').value;
+                const date = document.getElementById('evaluation-date').value;
+                
+                if (!employeeName) {
+                    showAlert('Veuillez entrer le nom du collaborateur.', 'error');
+                    return;
+                }
+                
+                if (!managerName) {
+                    showAlert('Veuillez entrer le nom du manager.', 'error');
+                    return;
+                }
+                
+                evaluationResults = [];
+                totalScore = 0;
+                let hasError = false;
+                
+                const evaluationItems = document.querySelectorAll('.evaluation-item');
+                
+                evaluationItems.forEach(item => {
+                    const objectiveId = item.dataset.id;
+                    const objective = objectives.find(obj => obj.id == objectiveId);
+                    
+                    const selectedLevel = item.querySelector('.achievement-level.selected');
+                    const actualValue = item.querySelector('.actual-value').value;
+                    const comments = item.querySelector('.comments').value;
+                    
+                    if (!selectedLevel || !actualValue) {
+                        showAlert('Veuillez sélectionner un niveau d\'atteinte et entrer une valeur réelle pour tous les objectifs.', 'error');
+                        hasError = true;
+                        return;
+                    }
+                    
+                    let achievementPercentage = parseInt(selectedLevel.dataset.level);
+                    
+                    // For exceptional objectives, we can go up to 150%
+                    if (objective.isExceptional && achievementPercentage > 120) {
+                        achievementPercentage = Math.min(achievementPercentage, 150);
+                    }
+                    
+                    const score = (achievementPercentage / 100) * objective.weight;
+                    
+                    evaluationResults.push({
+                        objectiveId,
+                        description: objective.description,
+                        weight: objective.weight,
+                        actualValue,
+                        achievementPercentage,
+                        score,
+                        comments,
+                        isExceptional: objective.isExceptional
+                    });
+                    
+                    totalScore += score;
+                });
+                
+                if (hasError) return;
+                
+                // Get skills analysis data
+                const strengths = document.getElementById('strengths').value;
+                const weaknesses = document.getElementById('weaknesses').value;
+                const trainingProposals = document.getElementById('training-proposals').value;
+                
+                // Save evaluation with results to local storage
+                let savedEvaluations = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
+                
+                // Check if this evaluation already exists
+                const existingIndex = savedEvaluations.findIndex(e => 
+                    e.employeeName === employeeName && 
+                    e.managerName === managerName && 
+                    e.date === date
+                );
+                
+                if (existingIndex !== -1) {
+                    // Update existing evaluation
+                    savedEvaluations[existingIndex].results = evaluationResults;
+                    savedEvaluations[existingIndex].totalScore = totalScore;
+                    savedEvaluations[existingIndex].strengths = strengths;
+                    savedEvaluations[existingIndex].weaknesses = weaknesses;
+                    savedEvaluations[existingIndex].trainingProposals = trainingProposals;
+                    savedEvaluations[existingIndex].status = 'completed';
+                } else {
+                    // Create new evaluation with results
+                    savedEvaluations.push({
+                        id: Date.now(),
+                        managerName,
+                        employeeName,
+                        company,
+                        date,
+                        objectives,
+                        results: evaluationResults,
+                        totalScore,
+                        strengths,
+                        weaknesses,
+                        trainingProposals,
+                        status: 'completed'
+                    });
+                }
+                
+                localStorage.setItem('savedEvaluations', JSON.stringify(savedEvaluations));
+                
+                // Render results
+                renderResults(employeeName, managerName, totalScore);
+                resultsTab.click();
+                
+                showAlert('Évaluation terminée et sauvegardée avec succès!', 'success');
+            }
+            
+            // Results functionality
+            const resultsSummary = document.getElementById('results-summary');
+            const resultsDetails = document.getElementById('results-details');
+            const newEvaluationBtn = document.getElementById('new-evaluation');
+            const printResultsBtn = document.getElementById('print-results');
+            const exportPdfBtn = document.getElementById('export-pdf');
+            const saveAnalysisBtn = document.getElementById('save-analysis');
+            
+            newEvaluationBtn.addEventListener('click', resetForm);
+            
+            printResultsBtn.addEventListener('click', () => {
+                window.print();
+            });
+            
+        
+            
+            saveAnalysisBtn.addEventListener('click', () => {
+                const employeeName = document.getElementById('collaborateur-name').value;
+                const managerName = document.getElementById('manager-name').value;
+                const date = document.getElementById('evaluation-date').value;
+                
+                if (!employeeName || !managerName || !date) {
+                    showAlert('Veuillez remplir tous les champs avant de sauvegarder.', 'error');
+                    return;
+                }
+                
+                // Get skills analysis data
+                const strengths = document.getElementById('strengths').value;
+                const weaknesses = document.getElementById('weaknesses').value;
+                const trainingProposals = document.getElementById('training-proposals').value;
+                
+                // Update in local storage
+                let savedEvaluations = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
+                const evaluationIndex = savedEvaluations.findIndex(e => 
+                    e.employeeName === employeeName && 
+                    e.managerName === managerName && 
+                    e.date === date
+                );
+                
+                if (evaluationIndex !== -1) {
+                    savedEvaluations[evaluationIndex].strengths = strengths;
+                    savedEvaluations[evaluationIndex].weaknesses = weaknesses;
+                    savedEvaluations[evaluationIndex].trainingProposals = trainingProposals;
+                    localStorage.setItem('savedEvaluations', JSON.stringify(savedEvaluations));
+                    
+                    showAlert('Analyse des compétences sauvegardée avec succès!', 'success');
+                } else {
+                    showAlert('Évaluation non trouvée. Veuillez d\'abord enregistrer l\'évaluation.', 'error');
+                }
+            });
+            
+            function getPerformanceLevel(score) {
+                if (score < 50) return { level: 'Insuffisant', color: 'red' };
+                if (score < 70) return { level: 'En développement', color: 'orange' };
+                if (score < 90) return { level: 'Compétent', color: 'yellow' };
+                if (score < 110) return { level: 'Très compétent', color: 'green' };
+                return { level: 'Exceptionnel', color: 'blue' };
+            }
+            
+            function renderResults(employeeName, managerName, totalScore) {
+                const performance = getPerformanceLevel(totalScore);
+                
+                // Summary
+                resultsSummary.innerHTML = `
+                    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                        <div class="mb-4 md:mb-0">
+                            <h3 class="text-lg font-semibold text-gray-800">Résumé de l'Évaluation</h3>
+                            <p class="text-gray-600">Manager: <span class="font-medium">${managerName}</span></p>
+                            <p class="text-gray-600">Collaborateur: <span class="font-medium">${employeeName}</span></p>
+                            <p class="text-gray-600">Date: <span class="font-medium">${new Date().toLocaleDateString('fr-FR')}</span></p>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-4xl font-bold text-blue-600">${totalScore.toFixed(1)}%</div>
+                            <div class="text-sm text-gray-500">Score Final</div>
+                            <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium bg-${performance.color}-100 text-${performance.color}-800">
+                                ${performance.level}
+                            </span>
+                        </div>
+                        <div class="mt-4 md:mt-0">
+                            <div class="text-sm text-gray-500">Poids Total: <span class="font-medium">100%</span></div>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <div class="flex justify-between text-sm text-gray-600 mb-1">
+                            <span>0%</span>
+                            <span>100%</span>
+                            <span>120%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill bg-blue-500" style="width: ${Math.min(totalScore, 120)}%"></div>
+                        </div>
+                    </div>
+                `;
+                
+                // Details
+                resultsDetails.innerHTML = `
+                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Détails par Objectif</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white border">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-700">
+                                    <th class="py-3 px-4 text-left">Objectif</th>
+                                    <th class="py-3 px-4 text-center">Poids</th>
+                                    <th class="py-3 px-4 text-center">Valeur Réelle</th>
+                                    <th class="py-3 px-4 text-center">Atteinte</th>
+                                    <th class="py-3 px-4 text-center">Score</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${evaluationResults.map((result, index) => `
+                                    <tr class="border-b ${result.isExceptional ? 'bg-purple-50' : ''}">
+                                        <td class="py-3 px-4">
+                                            <div class="font-medium flex items-center">
+                                                ${result.isExceptional ? '<i class="fas fa-star mr-2 text-purple-500"></i>' : ''}
+                                                ${result.isExceptional ? 'Objectif Exceptionnel' : `Objectif ${index + 1}`}
+                                            </div>
+                                            <div class="text-sm text-gray-500">${result.description}</div>
+                                            ${result.comments ? `<div class="mt-1 text-xs text-gray-400"><i class="fas fa-comment mr-1"></i>${result.comments}</div>` : ''}
+                                        </td>
+                                        <td class="py-3 px-4 text-center">${result.weight}%</td>
+                                        <td class="py-3 px-4 text-center">${result.actualValue}</td>
+                                        <td class="py-3 px-4 text-center">
+                                            <span class="inline-block px-2 py-1 rounded-full text-xs font-medium 
+                                                ${result.achievementPercentage === 0 ? 'bg-red-100 text-red-800' : 
+                                                  result.achievementPercentage === 25 ? 'bg-blue-100 text-orange-800' : 
+                                                  result.achievementPercentage === 50 ? 'bg-orange-100 text-yallow-800' : 
+                                                  result.achievementPercentage === 75 ? 'bg-yellow-100 text-blue-800' : 
+                                                  result.achievementPercentage === 100 ? 'bg-green-100 text-green-800' : 
+                                                 
+                                                  'bg-purple-100 text-purple-800'}">
+                                                ${result.achievementPercentage}%
+                                            </span>
+                                        </td>
+                                        <td class="py-3 px-4 text-center font-medium">${result.score.toFixed(1)}%</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                            <tfoot class="bg-gray-50">
+                                <tr>
+                                    <td class="py-3 px-4 text-right font-medium" colspan="4">Score Total:</td>
+                                    <td class="py-3 px-4 text-center font-bold text-blue-600">${totalScore.toFixed(1)}%</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                `;
+ 
+            }
+ 
+            // Initialize with 1 objective
+            addObjective();
+ document.getElementById("share-rh").addEventListener("click", function () {
+    if (!evaluationResults || evaluationResults.length === 0) {
+        alert("Aucun résultat d'évaluation à partager.");
+        return;
+    }
+    const collaborateurName = document.getElementById("collaborateur-name").value || 'Collaborateur';
+    const collaborateurSociete = document.getElementById("collaborateur-societe").value || 'Société inconnue';
+    const managerName = document.getElementById("manager-name").value || 'Manager';
+    const finalScore = evaluationResults.reduce((acc, obj) => acc + obj.score, 0) / evaluationResults.length;
+    const strengths = document.getElementById("strengths").value || 'Non renseigné';
+    const weaknesses = document.getElementById("weaknesses").value || 'Non renseigné';
+    const trainingProposals = document.getElementById("training-proposals").value || 'Non renseigné';
+    const wb = XLSX.utils.book_new();
+    // Construire la feuille unique
+    const combinedData = [
+        ['Nom du Collaborateur', collaborateurName],
+        ['Société', collaborateurSociete],
+        ['Nom du Manager', managerName],
+        ['Score Final (%)', totalScore.toFixed(1)],
+        ['Points Forts', strengths],
+        ['Axes d’Amélioration', weaknesses],
+        ['Formations Proposées', trainingProposals],
+        [],
+        ['Détails par Objectif'],
+    ];
+    // Ajouter les colonnes d'entête
+    combinedData.push([
+        'Objectif',
+        'Poids (%)',
+        'Valeur Réelle',
+        'Atteinte (%)',
+        'Score Obtenu (%)',
+        'Commentaires'
+    ]);
+    // Ajouter chaque objectif
+    evaluationResults.forEach(obj => {
+        combinedData.push([
+            obj.description,
+            obj.weight,
+            obj.actualValue,
+            obj.achievementPercentage,
+            obj.score.toFixed(1),
+            obj.comments
+        ]);
+    });
+    const sheet = XLSX.utils.aoa_to_sheet(combinedData);
+    XLSX.utils.book_append_sheet(wb, sheet, "Évaluation complète");
+    const date = new Date().toISOString().split("T")[0];
+    const fileName = `Resultats_Performance_${collaborateurName.replace(/\s+/g, '_')}_${date}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    // 2. Prépare l'email via Outlook ou client par défaut
+    const to = "oukadd85i@gmail.com"; // Change cette adresse RH
+    const subject = encodeURIComponent("Évaluation d'un collaborateur");
+        const nomCollaborateur = document.getElementById("collaborateur-name").value;
+const body = `
+ Bonjour,%0D%0A%0D%0A
+  Veuillez trouver ci-joint les résultats de l’évaluation de ${nomCollaborateur}.%0D%0A%0D%0A
+  Bien cordialement.
+`;
+  alert("Le fichier Excel a été téléchargé. Un e-mail est prêt. Veuillez l’ouvrir et joindre le fichier.");
+    // 3. Ouvre Outlook (ou le mail par défaut)
+    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+});
+ // A. Partager les objectifs
+document.getElementById("send-objectives-rh").addEventListener("click", function () {
+    const managerName = document.getElementById("manager-name").value || 'Manager';
+    const collaborateurName = document.getElementById("collaborateur-name").value || 'Collaborateur';
+    const collaborateurSociete = document.getElementById("collaborateur-societe").value || 'Société inconnue';
+
+  objectives = [];
+  document.querySelectorAll('.objective-item').forEach(item => {
+    const description = item.querySelector('.objective-description').value;
+    const weight = parseInt(item.querySelector('.objective-weight').value || '0');
+    const isExceptional = item.classList.contains('objective-exceptionnel');
+
+    if (!description || !weight) {
+        showAlert('Veuillez remplir tous les champs pour chaque objectif.', 'error');
+        return;
+    }
+
+    if (isExceptional) {
+        objectives.push({
+            id: item.dataset.id || Date.now().toString() + Math.random(),
+            description,
+            weight,
+            isExceptional
+        });
+    } else {
+        const floor = item.querySelector('.objective-floor').value;
+        const satisfactory = item.querySelector('.objective-satisfactory').value;
+        const goodPerformance = item.querySelector('.objective-goodPerformance').value;
+        const target = item.querySelector('.objective-target').value;
+
+        if (!floor || !satisfactory || !goodPerformance || !target) {
+            showAlert('Veuillez remplir tous les champs pour chaque objectif standard.', 'error');
+            return;
+        }
+
+        objectives.push({
+            id: item.dataset.id || Date.now().toString() + Math.random(),
+            description,
+            weight,
+            floor,
+            satisfactory,
+            goodPerformance,
+            target,
+            isExceptional
+        });
+    }
+});
+    if (!objectives || objectives.length === 0) {
+        alert("Aucun objectif à envoyer.");
+        return;
+    }
+    // Préparer les données
+    const objectivesData = objectives.map((obj, index) => ({
+        'Objectif': obj.description,
+        'Poids (%)': obj.weight,
+        'Seuil de départ': obj.floor,
+        'Satisfaisant ':obj.satisfactory,
+        'Bonnes performances':obj.goodPerformance,
+        'Cible': obj.target,
+        'Type': obj.isExceptional ? 'Exceptionnel' : `Objectif ${index + 1}`
+    }));
+    const infoHeader = [
+        ['Nom du Collaborateur', collaborateurName],
+        ['Société', collaborateurSociete],
+        ['Manager (N+1)', managerName],
+        [],
+        ['Liste des Objectifs']
+    ];
+    const wb = XLSX.utils.book_new();
+    const sheet = XLSX.utils.json_to_sheet(objectivesData, { origin: "A6" });
+    XLSX.utils.sheet_add_aoa(sheet, infoHeader, { origin: "A1" });
+    XLSX.utils.book_append_sheet(wb, sheet, "Objectifs");
+    const date = new Date().toISOString().split("T")[0];
+    const fileName = `Objectifs_${collaborateurName.replace(/\s+/g, '_')}_${date}.xlsx`;
+    XLSX.writeFile(wb, fileName);
+    // Préparer et ouvrir l'email
+    const to = "oukadd85i@gmail.com"; // <-- à adapter
+    const subject = encodeURIComponent(`Objectifs  - ${collaborateurName}`);
+    const bodyText = `Bonjour,\n\nNous vous transmettons ci-joint les objectifs établis pour ${collaborateurName} .\n\nBien cordialement,\n${managerName}`;
+    const body = encodeURIComponent(bodyText);
+    alert("Le fichier Excel des objectifs a été téléchargé. Un e-mail est prêt à être envoyé.");
+    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+});
+       });   
+
+    </script>
+
+</body>
+</html>
