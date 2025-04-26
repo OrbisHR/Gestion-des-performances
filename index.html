@@ -7,6 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://alcdn.msauth.net/browser/2.37.0/js/msal-browser.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="icon" href="/favicon.ico" type="image/x-icon">
+  <meta http-equiv="Content-Security-Policy" content="img-src 'self' https://oukafati.github.io data:;">
   <style>
     .bg-gradient {
       background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
@@ -65,94 +67,112 @@
   </div>
 
   <script>
-    console.log("Initialisation MSAL...");
-    
-    const msalConfig = {
-      auth: {
-        clientId: "27cd1750-4356-4fd4-a4d2-0b418ca13f34", // 🔁 Remplacez par votre vrai client ID Azure
-        authority: "https://login.microsoftonline.com/common",
-        redirectUri: "http://localhost:5500" // 🔁 Mets le bon port de ton Live Server
-      },
-      cache: {
-        cacheLocation: "sessionStorage",
-        storeAuthStateInCookie: false
+   console.log("Initialisation MSAL...");
+
+const msalConfig = {
+  auth: {
+    clientId: "27cd1750-4356-4fd4-a4d2-0b418ca13f34", // 🔁 Remplacez par votre vrai client ID Azure
+    authority: "https://login.microsoftonline.com/common",
+    redirectUri: "http://localhost:5500" // 🔁 Mets le bon port de ton Live Server
+  },
+  cache: {
+    cacheLocation: "localStorage",
+    storeAuthStateInCookie: false
+  }
+};
+
+const msalInstance = new msal.PublicClientApplication(msalConfig);
+const loginRequest = {
+  scopes: ["User.Read"],
+  prompt: "select_account"
+};
+
+// Vérifie si nous sommes dans une redirection après authentification
+msalInstance.handleRedirectPromise()
+  .then(response => {
+    if (response) {
+      handleResponse(response);
+    } else {
+      // Vérifie si un compte est déjà connecté
+      const accounts = msalInstance.getAllAccounts();
+      if (accounts.length > 0) {
+        console.log("Compte déjà connecté :", accounts[0]);
+        const silentRequest = {
+          scopes: ["User.Read"],
+          account: accounts[0]
+        };
+        msalInstance.acquireTokenSilent(silentRequest)
+          .then(handleResponse)
+          .catch(error => {
+            console.error("Erreur lors de l'acquisition silencieuse :", error);
+          });
       }
-    };
+    }
+  })
+  .catch(error => {
+    console.error("Erreur lors de la gestion de la redirection :", error);
+    showError("Une erreur est survenue lors de la connexion");
+  });
 
-    const msalInstance = new msal.PublicClientApplication(msalConfig);
-    const loginRequest = {
-      scopes: ["User.Read"],
-      prompt: "select_account"
-    };
+// Gestion du clic sur le bouton de connexion
+document.getElementById("loginBtn").addEventListener("click", async () => {
+  try {
+    showLoading();
 
-    // Vérifie si nous sommes dans une redirection après authentification
-    msalInstance.handleRedirectPromise()
-      .then(handleResponse)
-      .catch(error => {
-        console.error("Erreur lors de la gestion de la redirection:", error);
-        showError("Une erreur est survenue lors de la connexion");
-      });
+    // Vérifie d'abord s'il y a des comptes déjà connectés
+    const accounts = msalInstance.getAllAccounts();
+    if (accounts.length > 0) {
+      const silentRequest = {
+        scopes: ["User.Read"],
+        account: accounts[0]
+      };
 
-    // Gestion du clic sur le bouton de connexion
-    document.getElementById("loginBtn").addEventListener("click", async () => {
       try {
-        showLoading();
-        
-        // Vérifie d'abord s'il y a des comptes déjà connectés
-        const accounts = msalInstance.getAllAccounts();
-        if (accounts.length > 0) {
-          // Si un compte est déjà connecté, utilise le token existant
-          const silentRequest = {
-            scopes: ["User.Read"],
-            account: accounts[0]
-          };
-          
-          try {
-            const response = await msalInstance.acquireTokenSilent(silentRequest);
-            handleResponse(response);
-          } catch (silentError) {
-            console.log("Échec de l'acquisition silencieuse du token, tentative de login interactif", silentError);
-            await msalInstance.loginRedirect(loginRequest);
-          }
-        } else {
-          // Aucun compte connecté, lance le processus de connexion
-          await msalInstance.loginRedirect(loginRequest);
-        }
-      } catch (error) {
-        console.error("Erreur lors de la tentative de connexion:", error);
-        hideLoading();
-        showError("Impossible de démarrer le processus de connexion");
+        const response = await msalInstance.acquireTokenSilent(silentRequest);
+        handleResponse(response);
+      } catch (silentError) {
+        console.log("Échec de l'acquisition silencieuse du token, tentative de login interactif", silentError);
+        await msalInstance.loginRedirect(loginRequest);
       }
-    });
-
-    function handleResponse(response) {
-      hideLoading();
-      
-      if (response && response.account) {
-        const userEmail = response.account.username;
-        console.log("Connecté en tant que:", userEmail);
-        
-        // Stocke l'email dans le localStorage
-        localStorage.setItem("userEmail", userEmail);
-        
-        // Redirige vers le dashboard
-        window.location.href = "manager_dashboard.html";
-      } else {
-        console.log("Pas encore connecté.");
-      }
+    } else {
+      // Aucun compte connecté, lance le processus de connexion
+      await msalInstance.loginRedirect(loginRequest);
     }
+  } catch (error) {
+    console.error("Erreur lors de la tentative de connexion :", error);
+    hideLoading();
+    showError("Impossible de démarrer le processus de connexion");
+  }
+});
 
-    function showLoading() {
-      document.getElementById('loadingOverlay').classList.remove('hidden');
-    }
+function handleResponse(response) {
+  hideLoading();
 
-    function hideLoading() {
-      document.getElementById('loadingOverlay').classList.add('hidden');
-    }
+  if (response && response.account) {
+    const userEmail = response.account.username;
+    console.log("Connecté en tant que :", userEmail);
 
-    function showError(message) {
-      alert(message); // Dans une vraie application, vous utiliseriez un toast ou une modal plus élégante
-    }
+    // Stocke l'email dans le localStorage
+    localStorage.setItem("userEmail", userEmail);
+
+    // Redirige vers le dashboard
+    window.location.href = "manager_dashboard.html";
+  } else {
+    console.log("Pas encore connecté.");
+  }
+}
+
+function showLoading() {
+  document.getElementById('loadingOverlay').classList.remove('hidden');
+}
+
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
+function showError(message) {
+  alert(message); // Dans une vraie application, vous utiliseriez un toast ou une modal plus élégante
+}
   </script>
 </body>
 </html>
