@@ -7,8 +7,14 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://alcdn.msauth.net/browser/2.37.0/js/msal-browser.min.js"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <link rel="icon" href="/favicon.ico" type="image/x-icon">
-  <meta http-equiv="Content-Security-Policy" content="img-src 'self' https://oukafati.github.io data:;">
+  <link rel="icon" href="/Gestion-des-performances/favicon.ico" type="image/x-icon">
+  <meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  script-src 'self' https://cdn.tailwindcss.com https://alcdn.msauth.net https://cdnjs.cloudflare.com 'unsafe-inline';
+  style-src 'self' https://cdnjs.cloudflare.com 'unsafe-inline';
+  img-src 'self' https://oukafati.github.io data:;
+  font-src 'self' https://cdnjs.cloudflare.com data:;
+">
   <style>
     .bg-gradient {
       background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
@@ -73,7 +79,7 @@ const msalConfig = {
   auth: {
     clientId: "27cd1750-4356-4fd4-a4d2-0b418ca13f34", // 🔁 Remplacez par votre vrai client ID Azure
     authority: "https://login.microsoftonline.com/common",
-    redirectUri: "http://localhost:5500" // 🔁 Mets le bon port de ton Live Server
+    redirectUri: "https://oukafati.github.io/Gestion-des-performances/" // 🔁 Mets le bon port de ton Live Server
   },
   cache: {
     cacheLocation: "localStorage",
