@@ -143,7 +143,13 @@
                     <!-- User Input Section -->
                     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                           
+                            <div>
+                                <label for="manager-name" class="block text-gray-700 mb-2 font-medium">
+                                    <i class="fas fa-user-tie mr-2 text-blue-500"></i>Nom et Prénom de l'évaluateur (N+1)
+                                </label>
+                                <input type="text" id="manager-name" name="manager-name" placeholder="Nom du manager" />
+
+                            </div>
                             <div>
                                 <label for="collaborateur-name" class="block text-gray-700 mb-2 font-medium">
                                     <i class="fas fa-user mr-2 text-blue-500"></i>Nom et Prénom du collaborateur
@@ -439,23 +445,32 @@
     
                     const userName = userData.displayName;
     
-                 
-                }    
-catch (error) {
-                    console.error("Erreur lors de la récupération du nom d'utilisateur :", error);
+                    const welcomeMessage = document.getElementById('welcome-message');
+                if (welcomeMessage) {
+                    welcomeMessage.textContent = `Bienvenue, ${userName} !`;
+                }
+                    // Remplir le champ avec le nom de l'utilisateur
+                    const managerNameField = document.getElementById('manager-name');
+                    if (managerNameField) {
+                        managerNameField.value = userName;
+                    } else {
+                        console.error("Champ 'manager-name' introuvable.");
+                    }
+                } catch (error) {
+                    console.error("Erreur lors de la récupération du nom de l'utilisateur :", error);
                 }
             }
-            
-        }) ; 
-           
-        
+    
+            // Appelez la fonction pour récupérer le nom de l'utilisateur
+            fetchUserName();
+        });
     </script>
     <script>
         const msalConfig = {
     auth: {
         clientId: "27cd1750-4356-4fd4-a4d2-0b418ca13f34", // Remplacez par votre client ID Azure AD
         authority: "https://login.microsoftonline.com/common",
-        redirectUri: "https://orbishr.github.io/Gestion-des-performances/manager_dashboard.html/" // Remplacez par votre URL de redirection
+        redirectUri: "https://orbishr.github.io/Gestion-des-performances/manager_dashboard.html" // Remplacez par votre URL de redirection
     },
     cache: {
         cacheLocation: "localStorage",
@@ -521,7 +536,7 @@ const msalInstance = new msal.PublicClientApplication(msalConfig);
             });
             // Local storage for saved evaluations
             function saveEvaluationToLocalStorage() {
-          
+            const managerName = document.getElementById('manager-name').value;
             const employeeName = document.getElementById('collaborateur-name').value;
             const company = document.getElementById('collaborateur-societe').value;
              const date = document.getElementById('evaluation-date').value;
@@ -702,8 +717,8 @@ const msalInstance = new msal.PublicClientApplication(msalConfig);
     }
 
     // Remplir les champs du formulaire
-
-   
+    document.getElementById('manager-name').value = evaluation.managerName;
+    document.getElementById('collaborateur-name').value = evaluation.employeeName;
     document.getElementById('collaborateur-societe').value = evaluation.company;
     document.getElementById('evaluation-date').value = evaluation.date;
 
@@ -790,7 +805,11 @@ const msalInstance = new msal.PublicClientApplication(msalConfig);
             });
             
             evaluationTab.addEventListener('click', () => {
-               
+                const managerName = document.getElementById('manager-name').value;
+                if (!managerName) {
+                    showAlert('Veuillez entrer le nom du manager.', 'error');
+                    return;
+                }
                 
                 // Vérification du nombre d'objectifs
                 const objectiveItems = document.querySelectorAll('.objective-item:not(.objective-exceptionnel)');
@@ -1261,7 +1280,7 @@ const msalInstance = new msal.PublicClientApplication(msalConfig);
             
             function calculateScore() {
                 const employeeName = document.getElementById('collaborateur-name').value;
-                
+                const managerName = document.getElementById('manager-name').value;
                 const company = document.getElementById('collaborateur-societe').value;
                 const date = document.getElementById('evaluation-date').value;
                 
@@ -1388,7 +1407,7 @@ const msalInstance = new msal.PublicClientApplication(msalConfig);
             
             saveAnalysisBtn.addEventListener('click', () => {
                 const employeeName = document.getElementById('collaborateur-name').value;
-              
+                const managerName = document.getElementById('manager-name').value;
                 const date = document.getElementById('evaluation-date').value;
                 
                 if (!employeeName || !managerName || !date) {
@@ -1537,7 +1556,7 @@ const msalInstance = new msal.PublicClientApplication(msalConfig);
     }
     const collaborateurName = document.getElementById("collaborateur-name").value || 'Collaborateur';
     const collaborateurSociete = document.getElementById("collaborateur-societe").value || 'Société inconnue';
-    
+    const managerName = document.getElementById("manager-name").value || 'Manager';
     const finalScore = evaluationResults.reduce((acc, obj) => acc + obj.score, 0) / evaluationResults.length;
     const strengths = document.getElementById("strengths").value || 'Non renseigné';
     const weaknesses = document.getElementById("weaknesses").value || 'Non renseigné';
@@ -1595,7 +1614,12 @@ const body = `
 });
  // A. Partager les objectifs
  document.getElementById("send-objectives-rh").addEventListener("click", function () {
-   
+    const managerName = document.getElementById('manager-name').value.trim();
+    console.log('Manager:', managerName);
+    if (!managerName) {
+        showAlert('Veuillez renseigner le nom du manager.', 'error');
+        return;
+    }
 
     const collaborateurName = document.getElementById("collaborateur-name").value.trim();
     const collaborateurSociete = document.getElementById("collaborateur-societe").value.trim();
