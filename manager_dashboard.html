@@ -1608,7 +1608,7 @@ const body = `
   Veuillez trouver ci-joint les résultats de l’évaluation de ${nomCollaborateur}.%0D%0A%0D%0A
   Bien cordialement.
 `;
-  alert("Le fichier Excel a été téléchargé. Un e-mail est prêt. Veuillez l’ouvrir et joindre le fichier.");
+  alert(" Le fichier Excel a été téléchargé. Un e-mail est prêt. Veuillez y joindre le fichier, puis le transmettre au collaborateur et au RH.");
     // 3. Ouvre Outlook (ou le mail par défaut)
     window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
 });
@@ -1718,7 +1718,7 @@ const body = `
     const subject = encodeURIComponent(`Objectifs  - ${collaborateurName}`);
     const bodyText = `Bonjour,\n\nNous vous transmettons ci-joint les objectifs établis pour ${collaborateurName} .\n\nBien cordialement,\n${managerName}`;
     const body = encodeURIComponent(bodyText);
-    alert("Le fichier Excel des objectifs a été téléchargé. Un e-mail est prêt à être envoyé.");
+    alert("Le fichier Excel des objectifs a été téléchargé. Un e-mail est prêt à être envoyé au RH et au collaborateur.");
     window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
 });
        });   
