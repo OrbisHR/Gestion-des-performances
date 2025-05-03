@@ -74,7 +74,7 @@
       auth: {
         clientId: "27cd1750-4356-4fd4-a4d2-0b418ca13f34",
         authority: "https://login.microsoftonline.com/common",
-        redirectUri: "http://localhost:5500/",
+        redirectUri: "https://orbishr.github.io/Gestion-des-performances/",
       },
       cache: {
         cacheLocation: "localStorage",
@@ -105,7 +105,7 @@
     showError("Une erreur est survenue lors de la connexion");
   });
 
-document.getElementById("loginBtn").addEventListener("click", async () => {
+  document.getElementById("loginBtn").addEventListener("click", async () => {
   try {
     showLoading();
 
@@ -122,7 +122,10 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
         handleResponse(response);
       } catch (silentError) {
         console.log("Échec de l'acquisition silencieuse du token, tentative de login interactif", silentError);
-        await msalInstance.loginRedirect(loginRequest);
+        // Rediriger pour une connexion interactive uniquement si nécessaire
+        if (!msalInstance.getActiveAccount()) {
+          await msalInstance.loginRedirect(loginRequest);
+        }
       }
     } else {
       // Aucun compte connecté, rediriger pour une connexion interactive
@@ -135,20 +138,23 @@ document.getElementById("loginBtn").addEventListener("click", async () => {
   }
 });
 
-    function handleResponse(response) {
-      hideLoading();
+function handleResponse(response) {
+  hideLoading();
 
-      if (response && response.account) {
-        const userEmail = response.account.username;
-        console.log("Connecté en tant que :", userEmail);
+  if (response && response.account) {
+    const userEmail = response.account.username;
+    console.log("Connecté en tant que :", userEmail);
 
-        localStorage.setItem("userEmail", userEmail);
+    localStorage.setItem("userEmail", userEmail);
 
-        window.location.href = "manager_dashboard.html";
-      } else {
-        console.log("Pas encore connecté.");
-      }
+    // Rediriger uniquement si nécessaire
+    if (window.location.pathname !== "/manager_dashboard.html") {
+      window.location.href = "manager_dashboard.html";
     }
+  } else {
+    console.log("Pas encore connecté.");
+  }
+}
 
     function showLoading() {
       document.getElementById('loadingOverlay').classList.remove('hidden');
