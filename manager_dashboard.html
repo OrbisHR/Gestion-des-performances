@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestion des Objectifs - ORBIS</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://alcdn.msauth.net/browser/2.32.0/js/msal-browser.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
@@ -146,7 +147,8 @@
                                 <label for="manager-name" class="block text-gray-700 mb-2 font-medium">
                                     <i class="fas fa-user-tie mr-2 text-blue-500"></i>Nom et Prénom de l'évaluateur (N+1)
                                 </label>
-                                <input type="text" id="manager-name" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Entrez votre nom et prénom">
+                                <input type="text" id="manager-name" name="manager-name" placeholder="Nom du manager" />
+
                             </div>
                             <div>
                                 <label for="collaborateur-name" class="block text-gray-700 mb-2 font-medium">
@@ -161,7 +163,7 @@
                                 <select id="collaborateur-societe" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="" disabled selected>Choisissez une société</option>
                                     <option value="ORBIS HOLDING">ORBIS HOLDING</option>
-                                    <option value="ORBIS PROOTION">ORBIS PROMOTION</option>
+                                    <option value="ORBIS PRMOTION">ORBIS PROMOTION</option>
                                     <option value="ORBIS BERRIES">ORBIS BERRIES</option>
                                     <option value="ORBIS GREEN OLIVE">ORBIS GREEN OLIVE</option>
                                     <option value="ORBIS OLIVE OIL">ORBIS OLIVE OIL</option>
@@ -403,7 +405,62 @@
             </div>
         </div>
     </div>
-
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
+            async function fetchUserName() {
+                try {
+                    console.log("Récupération des comptes MSAL...");
+                    const accounts = msalInstance.getAllAccounts();
+                    if (accounts.length === 0) {
+                        console.error("Aucun utilisateur connecté.");
+                        return;
+                    }
+    
+                    console.log("Compte trouvé :", accounts[0]);
+    
+                    const silentRequest = {
+                        scopes: ["User.Read"],
+                        account: accounts[0]
+                    };
+    
+                    console.log("Acquisition du token silencieux...");
+                    const tokenResponse = await msalInstance.acquireTokenSilent(silentRequest);
+                    const accessToken = tokenResponse.accessToken;
+    
+                    console.log("Token acquis :", accessToken);
+    
+                    console.log("Appel à l'API Microsoft Graph...");
+                    const response = await fetch("https://graph.microsoft.com/v1.0/me", {
+                        headers: {
+                            Authorization: `Bearer ${accessToken}`
+                        }
+                    });
+    
+                    if (!response.ok) {
+                        throw new Error("Erreur lors de la récupération des informations utilisateur.");
+                    }
+    
+                    const userData = await response.json();
+                    console.log("Données utilisateur récupérées :", userData);
+    
+                    const userName = userData.displayName;
+    
+                    // Remplir le champ avec le nom de l'utilisateur
+                    const managerNameField = document.getElementById('manager-name');
+                    if (managerNameField) {
+                        managerNameField.value = userName;
+                    } else {
+                        console.error("Champ 'manager-name' introuvable.");
+                    }
+                } catch (error) {
+                    console.error("Erreur lors de la récupération du nom de l'utilisateur :", error);
+                }
+            }
+    
+            // Appelez la fonction pour récupérer le nom de l'utilisateur
+            fetchUserName();
+        });
+    </script>
     <script>
         const msalConfig = {
     auth: {
@@ -1552,52 +1609,78 @@ const body = `
     window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
 });
  // A. Partager les objectifs
-document.getElementById("send-objectives-rh").addEventListener("click", function () {
-    const managerName = document.getElementById("manager-name").value || 'Manager';
-    const collaborateurName = document.getElementById("collaborateur-name").value || 'Collaborateur';
-    const collaborateurSociete = document.getElementById("collaborateur-societe").value || 'Société inconnue';
-
-  objectives = [];
-  document.querySelectorAll('.objective-item').forEach(item => {
-    const description = item.querySelector('.objective-description').value;
-    const weight = parseInt(item.querySelector('.objective-weight').value || '0');
-    const isExceptional = item.classList.contains('objective-exceptionnel');
-
-    if (!description || !weight) {
-        showAlert('Veuillez remplir tous les champs pour chaque objectif.', 'error');
+ document.getElementById("send-objectives-rh").addEventListener("click", function () {
+    const managerName = document.getElementById('manager-name').value.trim();
+    console.log('Manager:', managerName);
+    if (!managerName) {
+        showAlert('Veuillez renseigner le nom du manager.', 'error');
         return;
     }
 
-    if (isExceptional) {
-        objectives.push({
-            id: item.dataset.id || Date.now().toString() + Math.random(),
-            description,
-            weight,
-            isExceptional
-        });
-    } else {
-        const floor = item.querySelector('.objective-floor').value;
-        const satisfactory = item.querySelector('.objective-satisfactory').value;
-        const goodPerformance = item.querySelector('.objective-goodPerformance').value;
-        const target = item.querySelector('.objective-target').value;
+    const collaborateurName = document.getElementById("collaborateur-name").value.trim();
+    const collaborateurSociete = document.getElementById("collaborateur-societe").value.trim();
 
-        if (!floor || !satisfactory || !goodPerformance || !target) {
-            showAlert('Veuillez remplir tous les champs pour chaque objectif standard.', 'error');
+    if (!collaborateurName || !collaborateurSociete) {
+        showAlert('Veuillez remplir tous les champs obligatoires.', 'error');
+        return;
+    }
+
+    const objectives = [];
+    let allObjectivesValid = true;
+
+    document.querySelectorAll('.objective-item').forEach(item => {
+        if (!allObjectivesValid) return; // Stop loop si erreur détectée
+
+        const description = item.querySelector('.objective-description').value.trim();
+        const weight = parseInt(item.querySelector('.objective-weight').value || '0');
+        const isExceptional = item.classList.contains('objective-exceptionnel');
+
+        if (!description || !weight) {
+            showAlert('Veuillez remplir tous les champs pour chaque objectif.', 'error');
+            allObjectivesValid = false;
             return;
         }
 
-        objectives.push({
-            id: item.dataset.id || Date.now().toString() + Math.random(),
-            description,
-            weight,
-            floor,
-            satisfactory,
-            goodPerformance,
-            target,
-            isExceptional
-        });
-    }
-});
+        if (isExceptional) {
+            objectives.push({
+                id: item.dataset.id || Date.now().toString() + Math.random(),
+                description,
+                weight,
+                isExceptional
+            });
+        } else {
+            const floor = item.querySelector('.objective-floor').value.trim();
+            const satisfactory = item.querySelector('.objective-satisfactory').value.trim();
+            const goodPerformance = item.querySelector('.objective-goodPerformance').value.trim();
+            const target = item.querySelector('.objective-target').value.trim();
+
+            if (!floor || !satisfactory || !goodPerformance || !target) {
+                showAlert('Veuillez remplir tous les champs pour chaque objectif standard.', 'error');
+                allObjectivesValid = false;
+                return;
+            }
+
+            objectives.push({
+                id: item.dataset.id || Date.now().toString() + Math.random(),
+                description,
+                weight,
+                floor,
+                satisfactory,
+                goodPerformance,
+                target,
+                isExceptional
+            });
+        }
+    });
+
+    if (!allObjectivesValid) return;
+
+    // Si tout est OK, on sauvegarde
+    saveEvaluationToLocalStorage();
+
+    // Ici tu peux poursuivre avec l'envoi ou autre logique
+
+
     if (!objectives || objectives.length === 0) {
         alert("Aucun objectif à envoyer.");
         return;
@@ -1636,119 +1719,7 @@ document.getElementById("send-objectives-rh").addEventListener("click", function
 });
        });   
  </script>
-<script>
-     
-document.addEventListener('DOMContentLoaded', async function () {
-    async function fetchUserName() {
-        try {
-            console.log("Récupération des comptes MSAL...");
-            const accounts = msalInstance.getAllAccounts();
-            if (accounts.length === 0) {
-                console.error("Aucun utilisateur connecté.");
-                return;
-            }
 
-            console.log("Compte trouvé :", accounts[0]);
 
-            const silentRequest = {
-                scopes: ["User.Read"],
-                account: accounts[0]
-            };
-
-            console.log("Acquisition du token silencieux...");
-            const tokenResponse = await msalInstance.acquireTokenSilent(silentRequest);
-            const accessToken = tokenResponse.accessToken;
-
-            console.log("Token acquis :", accessToken);
-
-            console.log("Appel à l'API Microsoft Graph...");
-            const response = await fetch("https://graph.microsoft.com/v1.0/me", {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`
-                }
-            });
-
-            if (!response.ok) {
-                throw new Error("Erreur lors de la récupération des informations utilisateur.");
-            }
-
-            const userData = await response.json();
-            console.log("Données utilisateur récupérées :", userData);
-
-            const userName = userData.displayName;
-
-            // Affichez le message de bienvenue
-            const welcomeMessageElement = document.getElementById('welcome-message');
-            if (welcomeMessageElement) {
-                welcomeMessageElement.textContent = `Bienvenue, ${userName} !`;
-                console.log("Message de bienvenue affiché :", `Bienvenue, ${userName} !`);
-            } else {
-                console.error("Élément HTML avec l'ID 'welcome-message' introuvable.");
-            }
-        } catch (error) {
-            console.error("Erreur lors de la récupération du nom de l'utilisateur :", error);
-        }
-    }
-
-    // Appelez la fonction pour récupérer le nom de l'utilisateur
-    fetchUserName();
-});
-</script>
-<script>
-    document.addEventListener('DOMContentLoaded', async function () {
-        async function fetchUserName() {
-            try {
-                console.log("Récupération des comptes MSAL...");
-                const accounts = msalInstance.getAllAccounts();
-                if (accounts.length === 0) {
-                    console.error("Aucun utilisateur connecté.");
-                    return;
-                }
-
-                console.log("Compte trouvé :", accounts[0]);
-
-                const silentRequest = {
-                    scopes: ["User.Read"],
-                    account: accounts[0]
-                };
-
-                console.log("Acquisition du token silencieux...");
-                const tokenResponse = await msalInstance.acquireTokenSilent(silentRequest);
-                const accessToken = tokenResponse.accessToken;
-
-                console.log("Token acquis :", accessToken);
-
-                console.log("Appel à l'API Microsoft Graph...");
-                const response = await fetch("https://graph.microsoft.com/v1.0/me", {
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`
-                    }
-                });
-
-                if (!response.ok) {
-                    throw new Error("Erreur lors de la récupération des informations utilisateur.");
-                }
-
-                const userData = await response.json();
-                console.log("Données utilisateur récupérées :", userData);
-
-                const userName = userData.displayName;
-
-                // Remplir le champ avec le nom de l'utilisateur
-                const managerNameField = document.getElementById('manager-name');
-                if (managerNameField) {
-                    managerNameField.value = userName;
-                } else {
-                    console.error("Champ 'manager-name' introuvable.");
-                }
-            } catch (error) {
-                console.error("Erreur lors de la récupération du nom de l'utilisateur :", error);
-            }
-        }
-
-        // Appelez la fonction pour récupérer le nom de l'utilisateur
-        fetchUserName();
-    });
-</script>
 </body>
 </html>
