@@ -616,8 +616,8 @@ const msalInstance = new msal.PublicClientApplication(msalConfig);
     const maxAllowedWeight = exceptionalObjectives.length === 2 ? 120 : exceptionalObjectives.length === 1 ? 120 : 100;
     const totalWeight = objectives.reduce((sum, obj) => sum + obj.weight, 0);
 
-    if (totalWeight > maxAllowedWeight) {
-        showAlert(`Le poids total des objectifs ne peut pas dépasser ${maxAllowedWeight}%.`, 'error');
+ if (exceptionalObjectives.length === 0 && totalWeight !== 100) {
+        showAlert('Le poids total des objectifs standards doit être exactement égal à 100%.', 'error');
         return;
     }
 
@@ -1023,16 +1023,16 @@ const msalInstance = new msal.PublicClientApplication(msalConfig);
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
                         <div>
                             <label class="block text-gray-700 mb-1">Seuil de départ </label>
-                            <input type="text" class="objective-floor w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 0 ventes">
+                            <input type="text" class="objective-floor w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 25 ventes">
                         </div>
                         <div>
                             <label class="block text-gray-700 mb-1">Satisfaisant </label>
-                            <input type="text" class="objective-satisfactory w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 25 ventes">
+                            <input type="text" class="objective-satisfactory w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 50 ventes">
                         </div>
                        
                         <div>
                             <label class="block text-gray-700 mb-1">Bonne performance </label>
-                            <input type="text" class="objective-goodPerformance w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 50 ventes">
+                            <input type="text" class="objective-goodPerformance w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 75 ventes">
                         </div>
 
                          <div>
@@ -1600,7 +1600,7 @@ const msalInstance = new msal.PublicClientApplication(msalConfig);
     const fileName = `Resultats_Performance_${collaborateurName.replace(/\s+/g, '_')}_${date}.xlsx`;
     XLSX.writeFile(wb, fileName);
     // 2. Prépare l'email via Outlook ou client par défaut
-    const to = "elmehdi.aqdim@orbisholding.ma"; // Change cette adresse RH
+    const to = "rh.performance@orbisholding.ma"; // Change cette adresse RH
     const subject = encodeURIComponent("Évaluation d'un collaborateur");
         const nomCollaborateur = document.getElementById("collaborateur-name").value;
 const body = `
@@ -1714,7 +1714,7 @@ const body = `
     const fileName = `Objectifs_${collaborateurName.replace(/\s+/g, '_')}_${date}.xlsx`;
     XLSX.writeFile(wb, fileName);
     // Préparer et ouvrir l'email
-    const to = "elmehdi.aqdim@orbisholding.ma"; // <-- à adapter
+    const to = "rh.performance@orbisholding.ma"; // <-- à adapter
     const subject = encodeURIComponent(`Objectifs  - ${collaborateurName}`);
     const bodyText = `Bonjour,\n\nNous vous transmettons ci-joint les objectifs établis pour ${collaborateurName} .\n\nBien cordialement,\n${managerName}`;
     const body = encodeURIComponent(bodyText);
