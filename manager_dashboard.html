@@ -1694,6 +1694,9 @@ const body = `
     }
     // Préparer les données
     const objectivesData = objectives.map((obj, index) => ({
+        'Nom de collaborateur': collaborateurName,
+        'Société': collaborateurSociete,
+        'Nom du Manager': managerName,
         'Objectif': obj.description,
         'Poids (%)': obj.weight,
         'Seuil de départ': obj.floor,
@@ -1702,13 +1705,7 @@ const body = `
         'Cible': obj.target,
         'Type': obj.isExceptional ? 'Exceptionnel' : `Objectif ${index + 1}`
     }));
-    const infoHeader = [
-        ['Nom du Collaborateur', collaborateurName],
-        ['Société', collaborateurSociete],
-        ['Manager (N+1)', managerName],
-        [],
-        ['Liste des Objectifs']
-    ];
+  
     const wb = XLSX.utils.book_new();
     const sheet = XLSX.utils.json_to_sheet(objectivesData, { origin: "A6" });
     XLSX.utils.sheet_add_aoa(sheet, infoHeader, { origin: "A1" });
