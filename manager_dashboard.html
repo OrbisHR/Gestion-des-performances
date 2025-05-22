@@ -1705,6 +1705,10 @@ const body = `
         'Cible': obj.target,
         'Type': obj.isExceptional ? 'Exceptionnel' : `Objectif ${index + 1}`
     }));
+       // En-tête de la feuille
+    const infoHeader = [
+     
+    ];
   
     const wb = XLSX.utils.book_new();
     const sheet = XLSX.utils.json_to_sheet(objectivesData, { origin: "A6" });
