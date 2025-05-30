@@ -85,6 +85,25 @@
             border-color: #f59e0b;
             background-color: #fffbeb;
         }
+        /* ...existing code... */
+#saved-list {
+  max-height: 350px;
+  overflow-y: auto;
+  padding-right: 4px; /* Pour éviter que la barre ne cache le contenu */
+  scrollbar-width: thin;
+  scrollbar-color: #2563eb #f3f4f6;
+}
+/* Pour Chrome, Edge, Safari */
+#saved-list::-webkit-scrollbar {
+  width: 8px;
+}
+#saved-list::-webkit-scrollbar-thumb {
+  background: #2563eb;
+  border-radius: 4px;
+}
+#saved-list::-webkit-scrollbar-track {
+  background: #f3f4f6;
+}
        
     </style>
     
@@ -1683,7 +1702,8 @@ const body = `
     if (!allObjectivesValid) return;
 
     // Si tout est OK, on sauvegarde
-    saveEvaluationToLocalStorage();
+
+    //saveEvaluationToLocalStorage();
 
     // Ici tu peux poursuivre avec l'envoi ou autre logique
 
