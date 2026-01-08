@@ -645,8 +645,8 @@ const msalInstance = new msal.PublicClientApplication(msalConfig);
 
     // Sauvegarder l'évaluation
     const evaluation = {
-        id: Date.now(),
-        managerName,
+         id: `${managerName}-${employeeName}-${date}`,
+managerName,
         employeeName,
         company,
         date,
@@ -1622,7 +1622,7 @@ const msalInstance = new msal.PublicClientApplication(msalConfig);
     const fileName = `Resultats_Performance_${collaborateurName.replace(/\s+/g, '_')}_${date}.xlsx`;
     XLSX.writeFile(wb, fileName);
     // 2. Prépare l'email via Outlook ou client par défaut
-    const to = "rh.performance@orbisholding.ma"; // Change cette adresse RH
+    const to = `${collaborateurName},rh.performance@orbisholding.ma`; // Change cette adresse RH
     const subject = encodeURIComponent("Évaluation d'un collaborateur");
         const nomCollaborateur = document.getElementById("collaborateur-name").value;
 const body = `
