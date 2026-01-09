@@ -1664,7 +1664,7 @@ managerName,
     XLSX.writeFile(wb, fileName);
     // 2. Prépare l'email via Outlook ou client par défaut
     const to = `${collaborateurName},rh.performance@orbisholding.ma`; // Change cette adresse RH
-    const subject = encodeURIComponent("Évaluation d'un collaborateur");
+    const subject = encodeURIComponent(`Evaluation  - ${collaborateurName}`);
         const nomCollaborateur = document.getElementById("collaborateur-name").value;
 const body = `
  Bonjour,%0D%0A%0D%0A
