@@ -9,142 +9,84 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        .progress-bar {
-            height: 10px;
-            border-radius: 5px;
-            background-color: #e5e7eb;
-
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%;
-            transition: width 0.3s ease;
-            max-width: 120%;
-        }
-        .achievement-level {
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .achievement-level:hover {
-            transform: scale(1.05);
-        }
-        .achievement-level.selected {
-            border-color: #3b82f6;
-            background-color: #eff6ff;
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-        }
-        .objective-item {
-            transition: all 0.3s ease;
-        }
-        .objective-item:hover {
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-        }
-        .fade-in {
-            animation: fadeIn 0.3s ease-in;
-        }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .print-only {
-            display: none;
-        }
-        @media print {
-            .no-print {
-                display: none;
-            }
-            .print-only {
-                display: block;
-            }
-            body {
-                background: white;
-                color: black;
-            }
-            .container {
-                max-width: 100%;
-                padding: 0;
-            }
-        }
-        .sidebar {
-            transition: all 0.3s ease;
-        }
-        .sidebar-collapsed {
-            transform: translateX(-100%);
-        }
-        .sidebar-toggle {
-            transition: all 0.3s ease;
-        }
-        .sidebar-toggle.collapsed {
-            transform: rotate(180deg);
-        }
-        .objective-exceptionnel {
-            border-left: 4px solid #8b5cf6;
-            background-color: #f5f3ff;
-        }
-        .weight-warning {
-            border-color: #f59e0b;
-            background-color: #fffbeb;
-        }
-        /* ...existing code... */
-#saved-list {
-  max-height: 350px;
-  overflow-y: auto;
-  padding-right: 4px; /* Pour éviter que la barre ne cache le contenu */
-  scrollbar-width: thin;
-  scrollbar-color: #2563eb #f3f4f6;
-}
-/* Pour Chrome, Edge, Safari */
-#saved-list::-webkit-scrollbar {
-  width: 8px;
-}
-#saved-list::-webkit-scrollbar-thumb {
-  background: #2563eb;
-  border-radius: 4px;
-}
-#saved-list::-webkit-scrollbar-track {
-  background: #f3f4f6;
-}
-       
+        * { box-sizing: border-box; }
+        body { margin: 0; }
+        .progress-bar { height: 10px; border-radius: 5px; background-color: #e5e7eb; overflow: hidden; }
+        .progress-fill { height: 100%; transition: width 0.3s ease; max-width: 100%; }
+        .achievement-level { cursor: pointer; transition: all 0.2s ease; }
+        .achievement-level:hover { transform: scale(1.05); }
+        .achievement-level.selected { border-color: #3b82f6; background-color: #eff6ff; box-shadow: 0 0 0 2px rgba(59,130,246,0.5); }
+        .objective-item { transition: all 0.3s ease; }
+        .objective-item:hover { box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+        .fade-in { animation: fadeIn 0.3s ease-in; }
+        @keyframes fadeIn { from { opacity:0; transform:translateY(10px); } to { opacity:1; transform:translateY(0); } }
+        .print-only { display: none; }
+        @media print { .no-print { display: none; } .print-only { display: block; } body { background: white; color: black; } }
+        .sidebar { transition: transform 0.3s ease; }
+        .sidebar-collapsed { transform: translateX(-100%); }
+        .weight-warning { border-color: #f59e0b; background-color: #fffbeb; }
+        .file-upload { border: 2px dashed #cbd5e0; border-radius: 0.5rem; transition: all 0.2s ease; }
+        .file-upload:hover, .file-upload.active { border-color: #4299e1; background-color: #ebf8ff; }
+        /* Pages */
+        .page { display: none; }
+        .page.active { display: block; }
+        /* Nav active */
+        .nav-btn { width: 100%; text-align: left; padding: 8px 12px; border-radius: 6px; display: flex; align-items: center; transition: background 0.2s; color: white; background: transparent; border: none; cursor: pointer; }
+        .nav-btn:hover { background: rgba(255,255,255,0.15); }
+        .nav-btn.active { background: #1d4ed8; }
+        /* Scrollbar saved list */
+        .saved-scroll { max-height: 350px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: #2563eb #f3f4f6; }
+        .saved-scroll::-webkit-scrollbar { width: 8px; }
+        .saved-scroll::-webkit-scrollbar-thumb { background: #2563eb; border-radius: 4px; }
+        .saved-scroll::-webkit-scrollbar-track { background: #f3f4f6; }
     </style>
-    
-
-
 </head>
 <body class="bg-gray-50 min-h-screen">
-    <div class="flex">
-        <!-- Sidebar -->
-        <div id="sidebar" class="sidebar w-64 bg-blue-800 text-white min-h-screen fixed z-10">
-            <div class="p-4 flex items-center justify-between border-b border-blue-700">
-                <img src="Logo.png" alt="Logo ORBIS" class="h-8 w-auto mr-2">
-                <h2 class="text-xl font-bold">PerformeIQ</h2>
-                <button id="sidebar-toggle" class="sidebar-toggle text-whitCe focus:outline-none">
-                    
-                </button>
-            </div>
-            <div class="p-4">
-                <div class="mb-6">
-                    <h3 class="text-sm uppercase font-semibold text-blue-300 mb-2">Navigation</h3>
-                    <ul>
-                        <li class="mb-1">
-                            <button id="nav-new" class="w-full text-left px-3 py-2 rounded-md bg-blue-700 flex items-center">
-                                <i class="fas fa-plus-circle mr-2"></i> Nouvelle Évaluation
-                            </button>
-                        </li>
-                        <li class="mb-1">
-                            <button id="nav-saved" class="w-full text-left px-3 py-2 rounded-md hover:bg-blue-700 flex items-center">
-                                <i class="fas fa-folder-open mr-2"></i> Évaluations Sauvegardées
-                            </button>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
+<div class="flex min-h-screen">
 
-        <!-- Main Content -->
-        <div id="main-content" class="flex-1 ml-64 transition-all duration-300">
+    <!-- ===== SIDEBAR ===== -->
+    <div id="sidebar" class="sidebar w-64 bg-blue-800 text-white min-h-screen fixed z-20 flex flex-col">
+        <div class="p-4 flex items-center justify-between border-b border-blue-700">
+            <img src="Logo.png" alt="Logo ORBIS" class="h-8 w-auto mr-2">
+            <h2 class="text-xl font-bold">PerformeIQ</h2>
+            <button id="sidebar-toggle" class="text-white focus:outline-none text-lg">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div class="p-4 flex-1">
+            <h3 class="text-xs uppercase font-semibold text-blue-300 mb-3 tracking-wider">Navigation</h3>
+            <ul class="space-y-1">
+                <li>
+                    <button id="nav-new" class="nav-btn active">
+                        <i class="fas fa-plus-circle mr-2"></i> Nouvelle Fixation des Objectifs
+                    </button>
+                </li>
+                <li>
+                    <button id="nav-saved" class="nav-btn">
+                        <i class="fas fa-folder-open mr-2"></i> Objectifs Sauvegardés
+                    </button>
+                </li>
+                <li>
+                    <button id="nav-auto-eval" class="nav-btn">
+                        <i class="fas fa-user-check mr-2"></i> Nouvelle Évaluation
+                    </button>
+                </li>
+                <li>
+                    <button id="nav-auto-saved" class="nav-btn">
+                        <i class="fas fa-folder-open mr-2"></i> Évaluations Sauvegardées
+                    </button>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div id="main-content" class="flex-1 ml-64 transition-all duration-300 min-h-screen">
+
+        <!-- ========== PAGE 1 : FIXATION DES OBJECTIFS ========== -->
+        <div id="page-fixation" class="page active">
             <div class="container mx-auto px-4 py-8">
                 <div class="max-w-5xl mx-auto">
-                    <!-- Header -->
                     <header class="mb-8 text-center">
                         <div class="flex justify-center mb-4">
                             <div class="bg-blue-100 p-4 rounded-full">
@@ -152,31 +94,26 @@
                             </div>
                         </div>
                         <h1 class="text-3xl font-bold text-blue-800 mb-2">Plateforme de Pilotage des Objectifs et Evaluation de la Performance</h1>
-                        <h1 class="text-3xl font-bold text-blue-800 mb-2">Groupe ORBIS</h1>
-                        <div id="welcome-message" class="text-xl font-bold text-blue-800 mb-4"></div>
+                        <h1 class="text-2xl font-bold text-blue-800 mb-2">Groupe ORBIS</h1>
+                        <div id="welcome-message" class="text-xl font-bold text-blue-600 mb-4"></div>
                         <div class="mt-4 print-only">
                             <p class="text-sm text-gray-500">Généré le <span id="print-date"></span></p>
                         </div>
                     </header>
 
-                    <!-- User Input Section -->
                     <div class="bg-white rounded-lg shadow-md p-6 mb-6">
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <label for="manager-name" class="block text-gray-700 mb-2 font-medium">
-                                    <i class="fas fa-user-tie mr-2 text-blue-500"></i>Nom et Prénom de l'évaluateur (N+1)
+                                    <i class="fas fa-user-tie mr-2 text-blue-500"></i>Prénom et Nom du Manager (N+1)
                                 </label>
-                                <input type="text" id="manager-name" name="manager-name" placeholder="Nom du manager" />
-
+                                <input type="text" id="manager-name" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Prénom et Nom du manager"/>
                             </div>
                             <div>
                                 <label for="collaborateur-name" class="block text-gray-700 mb-2 font-medium">
                                     <i class="fas fa-user mr-2 text-blue-500"></i>Prénom et Nom du collaborateur
                                 </label>
-                                <input list="collaborateur-list" id="collaborateur-name" name="collaborateur-name"
-                                    class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Prénom et Nom du collaborateur...">
-
+                                <input type="text" id="collaborateur-name" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Prénom et Nom du collaborateur...">
                             </div>
                             <div>
                                 <label for="collaborateur-societe" class="block text-gray-700 mb-2 font-medium">
@@ -184,120 +121,206 @@
                                 </label>
                                 <select id="collaborateur-societe" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     <option value="" disabled selected>Choisissez une société</option>
-                                    <option value="ORBIS HOLDING">ORBIS HOLDING</option>
-                                    <option value="ORBIS PRMOTION">ORBIS PROMOTION</option>
-                                    <option value="ORBIS BERRIES">ORBIS BERRIES</option>
-                                    <option value="ORBIS GREEN OLIVE">ORBIS GREEN OLIVE</option>
-                                    <option value="ORBIS OLIVE OIL">ORBIS OLIVE OIL</option>
-                                    <option value="ORBIS LAIT">ORBIS LAIT</option>
-                                    <option value="DASK">DASK</option>
-                                    <option value="ORBIS AGROTRADING">ORBIS AGROTRADING</option>
+                                    <option>ORBIS HOLDING</option><option>ORBIS PROMOTION</option>
+                                    <option>ORBIS BERRIES</option><option>ORBIS GREEN OLIVE</option>
+                                    <option>ORBIS OLIVE OIL</option><option>ORBIS LAIT</option>
+                                    <option>DASK</option><option>ORBIS AGROTRADING</option>
                                 </select>
                             </div>
                             <div>
                                 <label for="evaluation-date" class="block text-gray-700 mb-2 font-medium">
-                                    <i class="fas fa-calendar-alt mr-2 text-blue-500"></i>Date 
+                                    <i class="fas fa-calendar-alt mr-2 text-blue-500"></i>Date
                                 </label>
                                 <input type="date" id="evaluation-date" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Main Content -->
-                    <div class="bg-white rounded-lg shadow-md overflow-hidden">
-                        <!-- Tabs -->
-                        <div class="flex border-b no-print">
-                            <button id="objectives-tab" class="flex-1 py-4 px-6 font-medium text-center border-b-2 border-blue-500 text-blue-600 bg-blue-50">
-                                <i class="fas fa-bullseye mr-2"></i>Objectifs
-                            </button>
-                            <button id="evaluation-tab" class="flex-1 py-4 px-6 font-medium text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700">
-                                <i class="fas fa-user-check mr-2"></i>Évaluation
-                            </button>
-                            <button id="results-tab" class="flex-1 py-4 px-6 font-medium text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700">
-                                <i class="fas fa-chart-bar mr-2"></i>Résultats
-                            </button>
-                        </div>
- 
-                        <!-- Objectives Tab Content -->
-                        <div id="objectives-content" class="p-6">
-                            <div class="mb-6">
-                                <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                                    <i class="fas fa-bullseye mr-2 text-blue-500"></i>Définir les Objectifs
-                                </h2>
-                                
-                                
-                                <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
-                                    <div class="flex items-start">
-                                        <div class="flex-shrink-0 pt-1">
-                                            <i class="fas fa-info-circle text-blue-500"></i>
-                                        </div>
-                                        <div class="ml-3">
-                                            <h3 class="text-sm font-medium text-blue-800">Bonnes pratiques pour la fixation des objectifs</h3>
-                                            <div class="mt-2 text-sm text-blue-700">
-                                                <p>• Veillez à ce que les objectifs soient SMART :Spécifiques, Mesurables, Atteignables, Réalistes et Temporellement définis.</p>
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                            <i class="fas fa-bullseye mr-2 text-blue-500"></i>Définir les Objectifs
+                        </h2>
+                        <div class="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
+                            <div class="flex items-start">
+                                <i class="fas fa-info-circle text-blue-500 mt-1 mr-3"></i>
+                                <div class="text-sm text-blue-700">
+                                    <p class="font-medium text-blue-800 mb-1">Bonnes pratiques pour la fixation des objectifs</p>
+                                             <p>• Veillez à ce que les objectifs soient SMART :Spécifiques, Mesurables, Atteignables, Réalistes et Temporellement définis.</p>
                                                 <p>• Alignez les objectifs avec les priorités stratégiques de l’entreprise et les responsabilités du poste.</p>
-                                                <p>• Répartissez les poids de manière équilibrée, pour un total de 100 % (hors exceptionnels).</p>
+                                                <p>• Répartissez les poids de manière équilibrée, pour un total de 100 %.</p>
                                                 <p>• Prévoyez des critères d’évaluation clairs pour chaque objectif, avec des définitions précises pour chaque niveau d’atteinte</p>
-                                                <p>• Limitez les objectifs exceptionnels à deux maximum, représentant au plus 20 % du poids total. Ces objectifs doivent porter sur des enjeux à forte valeur ajoutée ou à impact transversal.</p>
                                                 <p>• Diversifiez les types d’objectifs : quantitatifs, qualitatifs, individuels, collectifs, transverses.</p>
                                                 <p>• Favorisez la clarté : 3 à 6 objectifs bien définis valent mieux qu'une longue liste.</p>
                                                 <p>• Impliquez le collaborateur dans la définition des objectifs pour renforcer l’adhésion.</p>
                                                 <p>• Planifiez des points de suivi réguliers pour ajuster les objectifs si nécessaire.</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div id="objectives-container">
-                                    <!-- Objectives will be added here -->
-                                </div>
-                                
-                                <div class="flex justify-between mt-6 no-print">
-                                    <div>
-                                        <button id="add-objective" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center transition-all mr-2">
-                                            <i class="fas fa-plus mr-2"></i> Ajouter un Objectif
-                                        </button>
-                                        <button id="add-exceptional" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-md flex items-center transition-all">
-                                            <i class="fas fa-star mr-2"></i> Objectif Exceptionnel
-                                        </button>
-                                    </div>
-                                    <div>
-                                        <button id="reset-objectives" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md flex items-center mr-2 transition-all">
-                                            <i class="fas fa-redo mr-2"></i> Réinitialiser
-                                        </button>
-                                        <button id="save-objectives" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md flex items-center transition-all">
-                                            <i class="fas fa-save mr-2"></i> Enregistrer
-                                        </button>
-                                        <button id="send-objectives-rh" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center transition-all">
-                                       <i class="fas fa-paper-plane mr-2"></i> Partager les Objectifs
-                                      </button>
-                                    </div>
-                                </div>
-                                
-                                <!-- Weight summary -->
-                                <div id="weight-summary" class="mt-4 p-3 border rounded-md hidden">
-                                    <div class="flex justify-between items-center">
-                                        <div>
-                                            <span class="font-medium">Poids total:</span>
-                                            <span id="total-weight" class="ml-2">0%</span>
-                                        </div>
-                                        <div id="weight-status" class="text-sm">
-                                            <!-- Status message will appear here -->
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
                         </div>
+                        <div id="objectives-container"></div>
+                        <div class="flex justify-between mt-6 no-print flex-wrap gap-2">
+                            <button id="add-objective" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center transition-all">
+                                <i class="fas fa-plus mr-2"></i> Ajouter un Objectif
+                            </button>
+                            <div class="flex gap-2 flex-wrap">
+                                <button id="reset-objectives" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md flex items-center transition-all">
+                                    <i class="fas fa-redo mr-2"></i> Réinitialiser
+                                </button>
+                                <button id="save-objectives" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md flex items-center transition-all">
+                                    <i class="fas fa-save mr-2"></i> Enregistrer
+                                </button>
+                                <button id="send-objectives-rh" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center transition-all">
+                                    <i class="fas fa-paper-plane mr-2"></i> Partager les Objectifs
+                                </button>
+                            </div>
+                        </div>
+                        <div id="weight-summary" class="mt-4 p-3 border rounded-md hidden">
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium">Poids total: <span id="total-weight">0%</span></span>
+                                <div id="weight-status" class="text-sm"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-                        <!-- Evaluation Tab Content -->
-                        <div id="evaluation-content" class="p-6 hidden">
-                            <div class="mb-6">
-                                <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                                    <i class="fas fa-user-check mr-2 text-blue-500"></i>Évaluer le Collaborateur
-                                </h2>
-                              
-                                
-                                <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6">
+        <!-- ========== PAGE 2 : OBJECTIFS SAUVEGARDÉS ========== -->
+        <div id="page-saved" class="page">
+            <div class="container mx-auto px-4 py-8">
+                <div class="max-w-5xl mx-auto">
+                    <header class="mb-6 text-center">
+                        <div class="flex justify-center mb-3">
+                            <div class="bg-green-100 p-4 rounded-full">
+                                <i class="fas fa-folder-open text-green-600 text-3xl"></i>
+                            </div>
+                        </div>
+                        <h1 class="text-2xl font-bold text-blue-800">Objectifs Sauvegardés</h1>
+                    </header>
+
+                    <!-- Recherche globale -->
+                    <div class="mb-4">
+                        <input type="text" id="search-saved" placeholder="Rechercher un collaborateur..."
+                            class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+
+                    <!-- SECTION 1 : Fixations d'objectifs -->
+                    <div class="bg-white rounded-xl shadow-md mb-6 overflow-hidden">
+                        <div class="bg-blue-700 px-6 py-4 flex items-center gap-3">
+                            <div class="bg-blue-500 p-2 rounded-lg">
+                                <i class="fas fa-bullseye text-white text-lg"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-white font-bold text-lg">Fixation des Objectifs</h2>
+                               
+                            </div>
+                            <span id="fixation-count" class="ml-auto bg-blue-500 text-white text-xs font-bold px-3 py-1 rounded-full">0</span>
+                        </div>
+                        <div class="p-6">
+                            <div id="fixation-list" class="saved-scroll space-y-3">
+                                <div class="text-center py-8 text-gray-400">
+                                    <i class="fas fa-bullseye text-4xl mb-2 block"></i>
+                                    <p>Aucune fixation d'objectifs sauvegardée</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2 : Auto-Évaluations -->
+                  
+
+                </div>
+            </div>
+        </div>
+
+        <!-- ========== PAGE 3 : AUTO-ÉVALUATION ========== -->
+        <div id="page-auto-eval" class="page">
+            <div class="container mx-auto px-4 py-8">
+                <div class="max-w-5xl mx-auto">
+                    <header class="mb-6 text-center">
+                        <div class="flex justify-center mb-3">
+                            <div class="bg-blue-100 p-4 rounded-full">
+                                <i class="fas fa-user-check text-blue-600 text-3xl"></i>
+                            </div>
+                        </div>
+                        <h1 class="text-2xl font-bold text-blue-800 mb-1">Evaluation de la Performance</h1>
+                        <h2 class="text-lg font-semibold text-blue-700">Groupe ORBIS</h2>
+                        <p id="auto-page-subtitle" class="text-gray-500 mt-1">Importez les objectifs et évaluez les performances</p>
+                    </header>
+
+                    <!-- Champs utilisateur -->
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                                <label for="auto-collab-name" class="block text-gray-700 mb-2 font-medium">
+                                    <i class="fas fa-user mr-2 text-blue-500"></i>Prénom et Nom du Collaborateur
+                                </label>
+                                <input type="text" id="auto-collab-name" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Entrez votre nom et prénom">
+                            </div>
+                            <div>
+                                <label for="auto-societe" class="block text-gray-700 mb-2 font-medium">
+                                    <i class="fas fa-building mr-2 text-blue-500"></i>Société
+                                </label>
+                                <input type="text" id="auto-societe" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Entrez votre société">
+                            </div>
+                            <div>
+                                <label for="auto-eval-date" class="block text-gray-700 mb-2 font-medium">
+                                    <i class="fas fa-calendar-alt mr-2 text-blue-500"></i>Date d'évaluation
+                                </label>
+                                <input type="date" id="auto-eval-date" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                            <div>
+                                <label for="auto-manager-name" class="block text-gray-700 mb-2 font-medium">
+                                    <i class="fas fa-user-tie mr-2 text-blue-500"></i>Prénom et Nom du Manager (N+1)
+                                </label>
+                                <input type="text" id="auto-manager-name" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Entrez le nom de votre manager">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Import fichier -->
+                    <div id="auto-import-section" class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                            <i class="fas fa-file-import mr-2 text-blue-500"></i>Importer les Objectifs
+                        </h2>
+                        <div class="file-upload p-8 text-center cursor-pointer" id="auto-file-upload-area">
+                            <div class="flex flex-col items-center justify-center">
+                                <i class="fas fa-file-excel text-4xl text-green-500 mb-3"></i>
+                                <p class="text-gray-600 mb-2">Glissez-déposez votre fichier Excel d'objectifs ici</p>
+                                <p class="text-sm text-gray-400 mb-4">ou</p>
+                                <label for="auto-file-input" class="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 cursor-pointer transition-colors">
+                                    <i class="fas fa-folder-open mr-2"></i> Sélectionner un fichier
+                                </label>
+                                <input type="file" id="auto-file-input" class="hidden" accept=".xlsx,.xls">
+                            </div>
+                        </div>
+                        <div id="auto-file-info" class="mt-4 hidden">
+                            <div class="flex items-center justify-between bg-gray-50 p-3 rounded-md">
+                                <div class="flex items-center">
+                                    <i class="fas fa-file-excel text-green-500 mr-2"></i>
+                                    <span id="auto-file-name" class="font-medium"></span>
+                                </div>
+                                <button id="auto-remove-file" class="text-red-500 hover:text-red-700"><i class="fas fa-times"></i></button>
+                            </div>
+                        </div>
+                        <p class="mt-4 text-sm text-gray-500"><i class="fas fa-info-circle mr-1"></i> Le fichier doit contenir la liste des objectifs exportés depuis la fixation.</p>
+                    </div>
+
+                    <!-- Evaluation container -->
+                    <div id="auto-evaluation-container" class="bg-white rounded-lg shadow-md overflow-hidden hidden">
+                        <div class="flex border-b no-print">
+                            <button id="auto-evaluation-tab" class="flex-1 py-4 px-6 font-medium text-center border-b-2 border-blue-500 text-blue-600 bg-blue-50">
+                                <i class="fas fa-user-check mr-2"></i>Evaluation de la Performance
+                            </button>
+                            <button id="auto-results-tab" class="flex-1 py-4 px-6 font-medium text-center border-b-2 border-transparent text-gray-500 hover:text-gray-700">
+                                <i class="fas fa-chart-bar mr-2"></i>Résultats
+                            </button>
+                        </div>
+
+                        <div id="auto-evaluation-content" class="p-6">
+                            <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                                <i class="fas fa-user-check mr-2 text-blue-500"></i>Evaluation de la Performance
+                            </h2>
+                               <div class="bg-yellow-50 border border-yellow-200 rounded-md p-4 mb-6">
                                     <div class="flex items-start">
                                         <div class="flex-shrink-0 pt-1">
                                             <i class="fas fa-exclamation-circle text-yellow-500"></i>
@@ -362,31 +385,28 @@
                                 <div id="evaluation-container">
                                     <!-- Evaluation items will be added here -->
                                 </div>
-                                
-                                <div class="flex justify-end mt-6 no-print">
-                                    <button id="calculate-score" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md flex items-center transition-all">
-                                        <i class="fas fa-calculator mr-2"></i> Calculer le Score
-                                    </button>
-                                </div>
+                            
+                            <div id="auto-evaluation-items-container"></div>
+                            <div class="mt-6">
+                                <label class="block text-gray-700 mb-2 font-medium">
+                                    <i class="fas fa-comment-dots mr-2 text-blue-500"></i>Commentaires généraux
+                                </label>
+                                <textarea id="auto-general-comments" class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" rows="4" placeholder="Ajoutez vos commentaires..."></textarea>
+                            </div>
+                            <div class="flex justify-end mt-6">
+                                <button id="auto-calculate-score" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-md flex items-center transition-all">
+                                    <i class="fas fa-calculator mr-2"></i> Calculer le Score
+                                </button>
                             </div>
                         </div>
 
-                        <!-- Results Tab Content -->
-                        <div id="results-content" class="p-6 hidden">
-                            <div class="mb-6">
-                                <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
-                                    <i class="fas fa-chart-bar mr-2 text-blue-500"></i>Résultats de l'Évaluation
-                                </h2>
-                                
-                                <div id="results-summary" class="bg-gray-50 p-6 rounded-md mb-6 border border-gray-200">
-                                    <!-- Results summary will be shown here -->
-                                </div>
-                                
-                                <div id="results-details">
-                                    <!-- Detailed results will be shown here -->
-                                </div>
-
-                                <!-- Skills Analysis Section -->
+                        <div id="auto-results-content" class="p-6 hidden">
+                            <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
+                                <i class="fas fa-chart-bar mr-2 text-blue-500"></i>Résultats de l'Évaluation
+                            </h2>
+                            <div id="auto-results-summary" class="bg-gray-50 p-6 rounded-md mb-6 border border-gray-200"></div>
+                            <div id="auto-results-details"></div>
+                              <!-- Skills Analysis Section -->
                                 <div id="skills-analysis" class="bg-white rounded-lg shadow-md p-6 mb-6">
                                     <h2 class="text-xl font-semibold mb-4 text-gray-800 flex items-center">
                                         <i class="fas fa-tasks mr-2 text-blue-500"></i>Analyse des Compétences
@@ -423,1372 +443,945 @@
                                         </button>
                                     </div>
                                 </div>
-                                
-                                <div class="flex justify-end mt-6 no-print">
-                                    <button id="new-evaluation" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md flex items-center mr-2 transition-all">
-                                        <i class="fas fa-redo mr-2"></i> Nouvelle Évaluation
-                                    </button>
-                                
-                                    <button id="print-results" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center transition-all">
-                                        <i class="fas fa-print mr-2"></i> Imprimer
-                                    </button>
-                                    <button id="share-rh" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md flex items-center">
-                                    <i class="fas fa-paper-plane mr-2"></i> Partager 
-                                       </button>
-                                </div>
+                            <div class="flex justify-end mt-6 gap-2 flex-wrap">
+                                <button id="auto-new-evaluation" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md flex items-center transition-all">
+                                    <i class="fas fa-redo mr-2"></i> Nouvelle Évaluation
+                                </button>
+                                <button id="auto-print-results" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md flex items-center transition-all">
+                                    <i class="fas fa-print mr-2"></i> Imprimer
+                                </button>
+                                <button id="auto-send-to-rh" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md flex items-center transition-all">
+                                    <i class="fas fa-paper-plane mr-2"></i> Partager
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Saved Evaluations Modal -->
-    <div id="saved-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[80vh] overflow-hidden">
-            <div class="flex justify-between items-center border-b p-4">
-                <h3 class="text-xl font-semibold text-gray-800">Évaluations Sauvegardées</h3>
-                <button id="close-saved-modal" class="text-gray-500 hover:text-gray-700">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="p-4 overflow-y-auto">
-                <div class="mb-4">
-                    <input type="text" id="search-saved" placeholder="Rechercher un collaborateur..." class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <!-- ========== PAGE 4 : AUTO-ÉVALUATIONS SAUVEGARDÉES ========== -->
+        <div id="page-auto-saved" class="page">
+            <div class="container mx-auto px-4 py-8">
+                <div class="max-w-5xl mx-auto">
+                    <header class="mb-6 text-center">
+                        <div class="flex justify-center mb-3">
+                            <div class="bg-purple-100 p-4 rounded-full">
+                                <i class="fas fa-folder-open text-purple-600 text-3xl"></i>
+                            </div>
+                        </div>
+                        <h1 class="text-2xl font-bold text-blue-800">Évaluations Sauvegardées</h1>
+                       
+                    </header>
+
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="bg-purple-700 px-6 py-4 flex items-center gap-3">
+                            <div class="bg-purple-500 p-2 rounded-lg">
+                                <i class="fas fa-user-check text-white text-lg"></i>
+                            </div>
+                            <div>
+                                <h2 class="text-white font-bold text-lg">Évaluations de la performance</h2>
+                                
+                            </div>
+                            <span id="autoeval-count" class="ml-auto bg-purple-500 text-white text-xs font-bold px-3 py-1 rounded-full">0</span>
+                        </div>
+                        <div class="p-6">
+                            <div class="mb-4">
+                                <input type="text" id="search-auto-saved" placeholder="Rechercher un collaborateur..."
+                                    class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-purple-400">
+                            </div>
+                            <div id="autoeval-list" class="saved-scroll space-y-3"></div>
+                        </div>
+                    </div>
                 </div>
-                <div id="saved-list" class="space-y-3">
-                    <!-- Saved evaluations will be listed here -->
-                </div>
-            </div>
-            <div class="border-t p-4 flex justify-end">
-                <button id="cancel-saved-modal" class="px-4 py-2 bg-gray-500 text-white rounded-md hover:bg-gray-600">
-                    Fermer
-                </button>
             </div>
         </div>
-    </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', async function () {
-            async function fetchUserName() {
-                try {
-                    console.log("Récupération des comptes MSAL...");
-                    const accounts = msalInstance.getAllAccounts();
-                    if (accounts.length === 0) {
-                        console.error("Aucun utilisateur connecté.");
-                        return;
-                    }
-    
-                    console.log("Compte trouvé :", accounts[0]);
-    
-                    const silentRequest = {
-                        scopes: ["User.Read"],
-                        account: accounts[0]
-                    };
-    
-                    console.log("Acquisition du token silencieux...");
-                    const tokenResponse = await msalInstance.acquireTokenSilent(silentRequest);
-                    const accessToken = tokenResponse.accessToken;
-    
-                    console.log("Token acquis :", accessToken);
-    
-                    console.log("Appel à l'API Microsoft Graph...");
-                    const response = await fetch("https://graph.microsoft.com/v1.0/me", {
-                        headers: {
-                            Authorization: `Bearer ${accessToken}`
-                        }
-                    });
-    
-                    if (!response.ok) {
-                        throw new Error("Erreur lors de la récupération des informations utilisateur.");
-                    }
-    
-                    const userData = await response.json();
-                    console.log("Données utilisateur récupérées :", userData);
-    
-                    const userName = userData.displayName;
-    
-                    const welcomeMessage = document.getElementById('welcome-message');
-                if (welcomeMessage) {
-                    welcomeMessage.textContent = `Bienvenue, ${userName} !`;
-                }
-                    // Remplir le champ avec le nom de l'utilisateur
-                    const managerNameField = document.getElementById('manager-name');
-                    if (managerNameField) {
-                        managerNameField.value = userName;
-                    } else {
-                        console.error("Champ 'manager-name' introuvable.");
-                    }
-                } catch (error) {
-                    console.error("Erreur lors de la récupération du nom de l'utilisateur :", error);
-                }
-            }
-    
-            // Appelez la fonction pour récupérer le nom de l'utilisateur
-            fetchUserName();
-        });
-    </script>
-    <script>
-        const msalConfig = {
+
+    </div><!-- /main-content -->
+</div><!-- /flex -->
+
+<!-- Modal Objectifs Sauvegardés (depuis sidebar) - gardé pour compatibilité mais la page dédiée est utilisée -->
+
+<script>
+// =============================================
+// NAVIGATION PAR PAGES
+// =============================================
+function showPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const map = {
+        'page-fixation': 'nav-new',
+        'page-saved': 'nav-saved',
+        'page-auto-eval': 'nav-auto-eval',
+        'page-auto-saved': 'nav-auto-saved'
+    };
+    if (map[pageId]) document.getElementById(map[pageId]).classList.add('active');
+}
+
+// =============================================
+// MSAL CONFIG
+// =============================================
+const msalConfig = {
     auth: {
-        clientId: "27cd1750-4356-4fd4-a4d2-0b418ca13f34", // Remplacez par votre client ID Azure AD
+        clientId: "27cd1750-4356-4fd4-a4d2-0b418ca13f34",
         authority: "https://login.microsoftonline.com/common",
-        redirectUri: "https://orbishr.github.io/Gestion-des-performances/manager_dashboard.html" // Remplacez par votre URL de redirection
+        redirectUri: "https://orbishr.github.io/Gestion-des-performances/manager_dashboard.html"
     },
-    cache: {
-        cacheLocation: "localStorage",
-        storeAuthStateInCookie: false
-    }
+    cache: { cacheLocation: "localStorage", storeAuthStateInCookie: false }
 };
-
 const msalInstance = new msal.PublicClientApplication(msalConfig);
-        document.addEventListener('DOMContentLoaded', function() {
-            // Set print date
-            const now = new Date();
-            document.getElementById('print-date').textContent = now.toLocaleDateString('fr-FR', {
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            // Set default evaluation date to today
-            document.getElementById('evaluation-date').valueAsDate = new Date();
-            // Sidebar toggle functionality
-            const sidebar = document.getElementById('sidebar');
-            const sidebarToggle = document.getElementById('sidebar-toggle');
-            const mainContent = document.getElementById('main-content');
-            sidebarToggle.addEventListener('click', function() {
-                sidebar.classList.toggle('sidebar-collapsed');
-                mainContent.classList.toggle('ml-64');
-                mainContent.classList.toggle('ml-0');
-                sidebarToggle.classList.toggle('collapsed');
-            });
-            // Navigation buttons
-            document.getElementById('nav-new').addEventListener('click', function() {
-                resetForm();
-                document.getElementById('page-subtitle').textContent = 'Définissez les objectifs et évaluez les collaborateurs';
-            });
-            document.getElementById('nav-saved').addEventListener('click', showSavedEvaluations);
-            // Saved evaluations modal
-            const savedModal = document.getElementById('saved-modal');
-            const closeSavedModal = document.getElementById('close-saved-modal');
-            const cancelSavedModal = document.getElementById('cancel-saved-modal');
-            function showSavedEvaluations() {
-                savedModal.classList.remove('hidden');
-                renderSavedEvaluations();
+
+// =============================================
+// INIT
+// =============================================
+document.addEventListener('DOMContentLoaded', async function() {
+
+    // MSAL fetch user
+    try {
+        const accounts = msalInstance.getAllAccounts();
+        if (accounts.length > 0) {
+            const tokenResponse = await msalInstance.acquireTokenSilent({ scopes: ["User.Read"], account: accounts[0] });
+            const resp = await fetch("https://graph.microsoft.com/v1.0/me", { headers: { Authorization: `Bearer ${tokenResponse.accessToken}` } });
+            if (resp.ok) {
+                const userData = await resp.json();
+                const wm = document.getElementById('welcome-message');
+                if (wm) wm.textContent = `Bienvenue, ${userData.displayName} !`;
+                const mn = document.getElementById('manager-name');
+                if (mn) mn.value = userData.displayName;
             }
-            function hideSavedEvaluations() {
-                savedModal.classList.add('hidden');
-            }
-            closeSavedModal.addEventListener('click', hideSavedEvaluations);
-            cancelSavedModal.addEventListener('click', hideSavedEvaluations);
-            // Search functionality for saved evaluations
-            document.getElementById('search-saved').addEventListener('input', function() {
-                const searchTerm = this.value.toLowerCase();
-                const items = document.querySelectorAll('#saved-list > div');
-                
-                items.forEach(item => {
-                    const text = item.textContent.toLowerCase();
-                    if (text.includes(searchTerm)) {
-                        item.style.display = 'block';
-                    } else {
-                        item.style.display = 'none';
-                    }
-                });
-            });
-            // Local storage for saved evaluations
-            function saveEvaluationToLocalStorage() {
-            const managerName = document.getElementById('manager-name').value;
-            const employeeName = document.getElementById('collaborateur-name').value;
-            const company = document.getElementById('collaborateur-societe').value;
-             const date = document.getElementById('evaluation-date').value;
-
-         if (!managerName || !employeeName || !company || !date) {
-            showAlert('Veuillez remplir tous les champs avant de sauvegarder.', 'error');
-          return;
-    }
-
-    // Collecter tous les objectifs
-    const objectives = [];
-    document.querySelectorAll('.objective-item').forEach(item => {
-        const description = item.querySelector('.objective-description').value;
-        const weight = parseInt(item.querySelector('.objective-weight').value || '0');
-        const isExceptional = item.classList.contains('objective-exceptionnel');
-
-        if (!description || !weight) {
-            showAlert('Veuillez remplir tous les champs pour chaque objectif.', 'error');
-            return;
         }
+    } catch(e) { console.error('MSAL:', e); }
 
-        if (isExceptional) {
-            // Enregistrer uniquement la description et le poids pour les objectifs exceptionnels
-            objectives.push({
-                id: item.dataset.id || Date.now().toString() + Math.random(),
-                description,
-                weight,
-                isExceptional
-            });
-        } else {
-            // Enregistrer toutes les mesures pour les objectifs standards
-            const floor = item.querySelector('.objective-floor').value;
-            const satisfactory = item.querySelector('.objective-satisfactory').value;
-            const goodPerformance = item.querySelector('.objective-goodPerformance').value;
-            const target = item.querySelector('.objective-target').value;
+    // Print date
+    document.getElementById('print-date').textContent = new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    document.getElementById('evaluation-date').valueAsDate = new Date();
+    document.getElementById('auto-eval-date').valueAsDate = new Date();
 
-            if (!floor || !satisfactory || !goodPerformance || !target) {
-                showAlert('Veuillez remplir tous les champs pour chaque objectif standard.', 'error');
-                return;
-            }
-
-            objectives.push({
-                id: item.dataset.id || Date.now().toString() + Math.random(),
-                description,
-                weight,
-                floor,
-                satisfactory,
-                goodPerformance,
-                target,
-                isExceptional
-            });
-        }
+    // Sidebar toggle
+    const sidebar = document.getElementById('sidebar');
+    const mainContent = document.getElementById('main-content');
+    document.getElementById('sidebar-toggle').addEventListener('click', function() {
+        sidebar.classList.toggle('sidebar-collapsed');
+        mainContent.classList.toggle('ml-64');
+        mainContent.classList.toggle('ml-0');
     });
 
-    console.log('Objectifs collectés :', objectives);
+    // ---- NAV ----
+    document.getElementById('nav-new').addEventListener('click', function() {
+        showPage('page-fixation');
+        fixationResetForm();
+    });
+    document.getElementById('nav-saved').addEventListener('click', function() {
+        showPage('page-saved');
+        renderSavedEvaluations();
+    });
+    document.getElementById('nav-auto-eval').addEventListener('click', function() {
+        showPage('page-auto-eval');
+        autoResetForm();
+    });
+    document.getElementById('nav-auto-saved').addEventListener('click', function() {
+        showPage('page-auto-saved');
+        renderAutoSavedEvaluations();
+    });
 
-    // Vérification des objectifs standards et exceptionnels
-    const standardObjectives = objectives.filter(obj => !obj.isExceptional);
-    const exceptionalObjectives = objectives.filter(obj => obj.isExceptional);
+    // =============================================
+    // MODULE 1 : FIXATION DES OBJECTIFS
+    // =============================================
+    let objectives = [];
+    const objectivesContainer = document.getElementById('objectives-container');
+    const weightSummary = document.getElementById('weight-summary');
+    const totalWeightSpan = document.getElementById('total-weight');
+    const weightStatus = document.getElementById('weight-status');
 
-    if (standardObjectives.length < 3) {
-        showAlert('Vous devez définir entre 3 et 6 objectifs standards.', 'error');
-        return;
+    document.getElementById('add-objective').addEventListener('click', addObjective);
+    document.getElementById('save-objectives').addEventListener('click', saveEvaluationToLocalStorage);
+    document.getElementById('reset-objectives').addEventListener('click', resetObjectives);
+
+    function updateTotalWeight() {
+        const total = Array.from(document.querySelectorAll('.objective-item')).reduce((s, item) => s + parseInt(item.querySelector('.objective-weight').value || 0), 0);
+        totalWeightSpan.textContent = `${total}%`;
+        if (document.querySelectorAll('.objective-item').length > 0) weightSummary.classList.remove('hidden');
+        else weightSummary.classList.add('hidden');
+        if (total > 100) {
+            weightSummary.classList.add('weight-warning');
+            weightStatus.innerHTML = `<span class="text-red-500"><i class="fas fa-exclamation-circle mr-1"></i>Dépassement de ${total - 100}%</span>`;
+        } else if (total < 100) {
+            weightSummary.classList.remove('weight-warning');
+            weightStatus.innerHTML = `<span class="text-yellow-500"><i class="fas fa-info-circle mr-1"></i>Il reste ${100 - total}% à attribuer</span>`;
+        } else {
+            weightSummary.classList.remove('weight-warning');
+            weightStatus.innerHTML = `<span class="text-green-500"><i class="fas fa-check-circle mr-1"></i>Poids total correct (100%)</span>`;
+        }
     }
 
-    if (standardObjectives.length > 6) {
-        showAlert('Vous ne pouvez pas avoir plus de 6 objectifs standards.', 'error');
-        return;
+    function updateObjectiveNumbers() {
+        document.querySelectorAll('.objective-item').forEach((item, i) => {
+            const t = item.querySelector('h3');
+            if (t) t.innerHTML = `<i class="fas fa-bullseye mr-2 text-blue-500"></i>Objectif ${i + 1}`;
+        });
+        updateTotalWeight();
     }
 
-    if (exceptionalObjectives.length > 2) {
-        showAlert('Vous ne pouvez pas avoir plus de 2 objectifs exceptionnels.', 'error');
-        return;
+    function addObjective() {
+        if (document.querySelectorAll('.objective-item').length >= 6) { showAlert('Vous ne pouvez pas ajouter plus de 6 objectifs.', 'error'); return; }
+        const id = Date.now();
+        const el = document.createElement('div');
+        el.className = 'objective-item mb-6 p-4 border rounded-md bg-gray-50 fade-in';
+        el.dataset.id = id;
+        el.innerHTML = `
+            <div class="flex justify-between items-center mb-3">
+                <h3 class="font-medium text-gray-700 flex items-center"><i class="fas fa-bullseye mr-2 text-blue-500"></i>Objectif</h3>
+                <button class="delete-objective text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+            </div>
+            <div class="mb-3"><label class="block text-gray-700 mb-1">Description de l'objectif</label>
+                <input type="text" class="objective-description w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Décrivez l'objectif"></div>
+            <div class="mb-3"><label class="block text-gray-700 mb-1">Poids (%)</label>
+                <div class="relative"><input type="number" min="1" max="100" class="objective-weight w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="10">
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"><span class="text-gray-500">%</span></div></div></div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
+                <div><label class="block text-gray-700 mb-1">Seuil de départ</label><input type="text" class="objective-floor w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 25 ventes"></div>
+                <div><label class="block text-gray-700 mb-1">Satisfaisant</label><input type="text" class="objective-satisfactory w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 50 ventes"></div>
+                <div><label class="block text-gray-700 mb-1">Bonne performance</label><input type="text" class="objective-goodPerformance w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 75 ventes"></div>
+                <div><label class="block text-gray-700 mb-1">Cible</label><input type="text" class="objective-target w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 100 ventes"></div>
+            </div>`;
+        objectivesContainer.appendChild(el);
+        el.querySelector('.delete-objective').addEventListener('click', () => {
+            if (objectivesContainer.querySelectorAll('.objective-item').length <= 1) { showAlert('Vous devez avoir au moins 1 objectif.', 'error'); return; }
+            el.remove(); updateObjectiveNumbers();
+        });
+        el.querySelector('.objective-weight').addEventListener('input', updateTotalWeight);
+        updateObjectiveNumbers();
     }
 
-    // Vérification du poids total
-    const maxAllowedWeight = exceptionalObjectives.length === 2 ? 120 : exceptionalObjectives.length === 1 ? 120 : 100;
-    const totalWeight = objectives.reduce((sum, obj) => sum + obj.weight, 0);
-
- if (exceptionalObjectives.length === 0 && totalWeight !== 100) {
-        showAlert('Le poids total des objectifs standards doit être exactement égal à 100%.', 'error');
-        return;
+    function resetObjectives() {
+        if (confirm('Êtes-vous sûr de vouloir réinitialiser tous les objectifs ?')) {
+            objectivesContainer.innerHTML = ''; objectives = []; addObjective();
+            showAlert('Objectifs réinitialisés.', 'success');
+        }
     }
 
-    // Sauvegarder l'évaluation
-    const evaluation = {
-         id: `${managerName}-${employeeName}-${date}`,
-managerName,
-        employeeName,
-        company,
-        date,
-        objectives,
+    function renderObjectives() {
+        objectivesContainer.innerHTML = '';
+        objectives.forEach((obj, i) => {
+            const el = document.createElement('div');
+            el.className = 'objective-item mb-6 p-4 border rounded-md bg-gray-50 fade-in';
+            el.dataset.id = obj.id;
+            el.innerHTML = `
+                <div class="flex justify-between items-center mb-3">
+                    <h3 class="font-medium text-gray-700 flex items-center"><i class="fas fa-bullseye mr-2 text-blue-500"></i>Objectif ${i+1}</h3>
+                    <button class="delete-objective text-red-500 hover:text-red-700"><i class="fas fa-trash"></i></button>
+                </div>
+                <div class="mb-3"><label class="block text-gray-700 mb-1">Description</label><input type="text" class="objective-description w-full px-3 py-2 border rounded-md" value="${obj.description}"></div>
+                <div class="mb-3"><label class="block text-gray-700 mb-1">Poids (%)</label><div class="relative"><input type="number" min="1" max="100" class="objective-weight w-full px-3 py-2 border rounded-md" value="${obj.weight}"><div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none"><span class="text-gray-500">%</span></div></div></div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-3">
+                    <div><label class="block text-gray-700 mb-1">Seuil de départ</label><input type="text" class="objective-floor w-full px-3 py-2 border rounded-md" value="${obj.floor||''}"></div>
+                    <div><label class="block text-gray-700 mb-1">Satisfaisant</label><input type="text" class="objective-satisfactory w-full px-3 py-2 border rounded-md" value="${obj.satisfactory||''}"></div>
+                    <div><label class="block text-gray-700 mb-1">Bonne performance</label><input type="text" class="objective-goodPerformance w-full px-3 py-2 border rounded-md" value="${obj.goodPerformance||''}"></div>
+                    <div><label class="block text-gray-700 mb-1">Cible</label><input type="text" class="objective-target w-full px-3 py-2 border rounded-md" value="${obj.target||''}"></div>
+                </div>`;
+            objectivesContainer.appendChild(el);
+            el.querySelector('.delete-objective').addEventListener('click', () => {
+                if (objectivesContainer.querySelectorAll('.objective-item').length <= 1) { showAlert('Vous devez avoir au moins 1 objectif.', 'error'); return; }
+                el.remove(); updateObjectiveNumbers();
+            });
+            el.querySelector('.objective-weight').addEventListener('input', updateTotalWeight);
+        });
+        updateObjectiveNumbers();
+    }
+
+   function saveEvaluationToLocalStorage() {
+    const managerName = document.getElementById('manager-name').value.trim();
+    const employeeName = document.getElementById('collaborateur-name').value.trim();
+    const company = document.getElementById('collaborateur-societe').value.trim();
+    const date = document.getElementById('evaluation-date').value;
+    if (!managerName || !employeeName || !company || !date) { showAlert('Veuillez remplir tous les champs.', 'error'); return; }
+    const objs = [];
+    let valid = true;
+    document.querySelectorAll('.objective-item').forEach(item => {
+        if (!valid) return;
+        const description = item.querySelector('.objective-description').value.trim();
+        const weight = parseInt(item.querySelector('.objective-weight').value || '0');
+        const floor = item.querySelector('.objective-floor').value.trim();
+        const satisfactory = item.querySelector('.objective-satisfactory').value.trim();
+        const goodPerformance = item.querySelector('.objective-goodPerformance').value.trim();
+        const target = item.querySelector('.objective-target').value.trim();
+        if (!description || !weight || !floor || !satisfactory || !goodPerformance || !target) {
+            showAlert('Veuillez remplir tous les champs pour chaque objectif.', 'error'); valid = false; return;
+        }
+        objs.push({ id: item.dataset.id, description, weight, floor, satisfactory, goodPerformance, target, isExceptional: false });
+    });
+    if (!valid) return;
+    const std = objs.filter(o => !o.isExceptional);
+    if (std.length < 3) { showAlert('Vous devez définir entre 3 et 6 objectifs.', 'error'); return; }
+    if (std.length > 6) { showAlert('Vous ne pouvez pas avoir plus de 6 objectifs.', 'error'); return; }
+    const totalW = objs.reduce((s, o) => s + o.weight, 0);
+    if (totalW !== 100) { showAlert('Le poids total doit être exactement 100%.', 'error'); return; }
+    
+    // Ajouter l'analyse des compétences
+    const evaluation = { 
+        id: `${managerName}-${employeeName}-${date}`, 
+        type: 'fixation', 
+        managerName, 
+        employeeName, 
+        company, 
+        date, 
+        objectives: objs,
         strengths: document.getElementById('strengths').value || '',
         weaknesses: document.getElementById('weaknesses').value || '',
         trainingProposals: document.getElementById('training-proposals').value || '',
-        status: 'saved'
+        status: 'saved' 
     };
+    
+    let saved = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
+    const idx = saved.findIndex(e => e.id === evaluation.id);
+    if (idx !== -1) { saved[idx] = evaluation; showAlert('Objectifs mise à jour!', 'success'); }
+    else { saved.push(evaluation); showAlert('Objectifs sauvegardés!', 'success'); }
+    localStorage.setItem('savedEvaluations', JSON.stringify(saved));
+}
 
-    let savedEvaluations = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
-
-    // Vérifier si une évaluation avec le même ID existe déjà
-    const existingIndex = savedEvaluations.findIndex(e => e.id === evaluation.id);
-    if (existingIndex !== -1) {
-        // Remplacer l'évaluation existante
-        savedEvaluations[existingIndex] = evaluation;
-        showAlert('Évaluation mise à jour avec succès!', 'success');
-    } else {
-        // Ajouter une nouvelle évaluation
-        savedEvaluations.push(evaluation);
-        showAlert('Évaluation sauvegardée avec succès!', 'success');
+    function fixationResetForm() {
+        document.getElementById('collaborateur-name').value = '';
+        document.getElementById('collaborateur-societe').value = '';
+        document.getElementById('evaluation-date').valueAsDate = new Date();
+            document.getElementById('strengths').value = '';
+                document.getElementById('weaknesses').value = '';
+                document.getElementById('training-proposals').value = '';
+        objectives = []; objectivesContainer.innerHTML = '';
+        addObjective();
+        weightSummary.classList.add('hidden');
     }
 
-    localStorage.setItem('savedEvaluations', JSON.stringify(savedEvaluations));
-    renderSavedEvaluations();
-}
-            function renderSavedEvaluations() {
-                const savedList = document.getElementById('saved-list');
-                if (!savedList) return;
-                const savedEvaluations = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
-                savedList.innerHTML = '';
-                if (savedEvaluations.length === 0) {
-                    savedList.innerHTML = `
-                        <div class="text-center py-8 text-gray-500">
-                            <i class="fas fa-folder-open text-4xl mb-2"></i>
-                            <p>Aucune évaluation sauvegardée</p>
+    document.getElementById('send-objectives-rh').addEventListener('click', function() {
+        const managerName = document.getElementById('manager-name').value.trim();
+        const collaborateurName = document.getElementById('collaborateur-name').value.trim();
+        const collaborateurSociete = document.getElementById('collaborateur-societe').value.trim();
+        if (!managerName || !collaborateurName || !collaborateurSociete) { showAlert('Veuillez remplir tous les champs obligatoires.', 'error'); return; }
+        const objs = [];
+        let valid = true;
+        document.querySelectorAll('.objective-item').forEach(item => {
+            if (!valid) return;
+            const description = item.querySelector('.objective-description').value.trim();
+            const weight = parseInt(item.querySelector('.objective-weight').value || '0');
+            const floor = item.querySelector('.objective-floor').value.trim();
+            const satisfactory = item.querySelector('.objective-satisfactory').value.trim();
+            const goodPerformance = item.querySelector('.objective-goodPerformance').value.trim();
+            const target = item.querySelector('.objective-target').value.trim();
+            if (!description || !weight || !floor || !satisfactory || !goodPerformance || !target) { showAlert('Veuillez remplir tous les champs.', 'error'); valid = false; return; }
+            objs.push({ description, weight, floor, satisfactory, goodPerformance, target });
+        });
+        if (!valid || !objs.length) return;
+        const data = objs.map((obj, i) => ({ 'Nom de collaborateur': collaborateurName, 'Société': collaborateurSociete, 'Nom du Manager': managerName, 'Objectif': obj.description, 'Poids (%)': obj.weight, 'Seuil de départ': obj.floor, 'Satisfaisant ': obj.satisfactory, 'Bonne performance': obj.goodPerformance, 'Cible': obj.target, 'Type': `Objectif ${i+1}` }));
+        const wb = XLSX.utils.book_new();
+        const sheet = XLSX.utils.json_to_sheet(data, { origin: "A6" });
+        XLSX.utils.sheet_add_aoa(sheet, [], { origin: "A1" });
+        XLSX.utils.book_append_sheet(wb, sheet, "Objectifs");
+        const date = new Date().toISOString().split("T")[0];
+        XLSX.writeFile(wb, `Objectifs_${collaborateurName.replace(/\s+/g, '_')}_${date}.xlsx`);
+        const subject = encodeURIComponent(`Objectifs - ${collaborateurName}`);
+        const body = encodeURIComponent(`Bonjour,\n\nNous vous transmettons ci-joint les objectifs établis pour ${collaborateurName}\n\nBien cordialement,\n${managerName}`);
+        alert("Le fichier Excel a été téléchargé. Un e-mail est prêt à être envoyé.");
+        window.location.href = `mailto:${collaborateurName},rh.performance@orbisholding.ma?subject=${subject}&body=${body}`;
+    });
+
+    addObjective();
+
+    // =============================================
+    // MODULE 2 : OBJECTIFS SAUVEGARDÉS (PAGE)
+    // =============================================
+    document.getElementById('search-saved').addEventListener('input', function() {
+        renderSavedEvaluations();
+    });
+
+    function renderSavedEvaluations() {
+        const saved = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
+        const searchTerm = (document.getElementById('search-saved').value || '').toLowerCase();
+
+        // Séparer les deux types
+        const fixations = saved.filter(e => e.type !== 'auto-evaluation');
+        const autoEvals = saved.filter(e => e.type === 'auto-evaluation');
+
+        // --- Rendre la liste Fixation ---
+        const fixationList = document.getElementById('fixation-list');
+        const fixationFiltered = fixations.filter(e =>
+            !searchTerm || e.employeeName.toLowerCase().includes(searchTerm) || (e.company||'').toLowerCase().includes(searchTerm)
+        ).slice().reverse();
+
+        document.getElementById('fixation-count').textContent = fixationFiltered.length;
+        fixationList.innerHTML = '';
+        if (fixationFiltered.length === 0) {
+            fixationList.innerHTML = `<div class="text-center py-8 text-gray-400"><i class="fas fa-bullseye text-4xl mb-2 block"></i><p>Aucune fixation d'objectifs sauvegardée</p></div>`;
+        } else {
+            fixationFiltered.forEach(evaluation => {
+                const el = document.createElement('div');
+                el.className = 'border border-blue-100 rounded-lg p-4 hover:bg-blue-50 transition-colors';
+                el.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">${evaluation.employeeName}</h4>
+                            <p class="text-sm text-gray-500">${evaluation.company}</p>
+                            <p class="text-xs text-gray-400 mt-1">Défini par <span class="font-medium">${evaluation.managerName}</span> le ${new Date(evaluation.date).toLocaleDateString('fr-FR')}</p>
                         </div>
-                    `;
-                    return;
-                }
-                savedEvaluations.forEach(evaluation => {
-                    const evaluationElement = document.createElement('div');
-                    evaluationElement.className = 'border rounded-md p-4 hover:bg-gray-50 cursor-pointer transition-colors';
-                    evaluationElement.innerHTML = `
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h4 class="font-medium text-gray-800">${evaluation.employeeName}</h4>
-                                <p class="text-sm text-gray-500">${evaluation.company}</p>
-                                <p class="text-xs text-gray-400 mt-1">Défini par ${evaluation.managerName} le ${new Date(evaluation.date).toLocaleDateString('fr-FR')}</p>
+                        <div class="flex space-x-2 ml-2">
+                            <button class="load-evaluation px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600" data-id="${evaluation.id}">
+                                <i class="fas fa-edit mr-1"></i> Charger
+                            </button>
+                            <button class="delete-evaluation px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600" data-id="${evaluation.id}">
+                                <i class="fas fa-trash mr-1"></i> Supprimer
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mt-2 flex items-center gap-2">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium ${evaluation.status === 'saved' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">
+                            ${evaluation.status === 'saved' ? "" : 'Terminée'}
+                        </span>
+                        <span class="text-xs text-gray-400">${(evaluation.objectives||[]).length} objectif(s)</span>
+                    </div>`;
+                fixationList.appendChild(el);
+                el.querySelector('.load-evaluation').addEventListener('click', () => loadEvaluation(evaluation.id));
+                el.querySelector('.delete-evaluation').addEventListener('click', () => {
+                    if (confirm('Supprimer cette fixation d\'objectifs ?')) {
+                        let s = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
+                        s = s.filter(e => e.id != evaluation.id);
+                        localStorage.setItem('savedEvaluations', JSON.stringify(s));
+                        showAlert('Supprimé avec succès.', 'success');
+                        renderSavedEvaluations();
+                    }
+                });
+            });
+        }
+
+        // --- Rendre la liste Auto-Évaluations ---
+        const autoevalList = document.getElementById('autoeval-list');
+        const autoFiltered = autoEvals.filter(e =>
+            !searchTerm || e.employeeName.toLowerCase().includes(searchTerm) || (e.company||'').toLowerCase().includes(searchTerm)
+        ).slice().reverse();
+
+        document.getElementById('autoeval-count').textContent = autoFiltered.length;
+        autoevalList.innerHTML = '';
+        if (autoFiltered.length === 0) {
+            autoevalList.innerHTML = `<div class="text-center py-8 text-gray-400"><i class="fas fa-user-check text-4xl mb-2 block"></i><p>Aucune évaluation sauvegardée</p></div>`;
+        } else {
+            autoFiltered.forEach(evaluation => {
+                const score = Number(evaluation.totalScore || 0);
+                const perf = score >= 110 ? {label:'Exceptionnel',color:'blue'} : score >= 90 ? {label:'Très compétent',color:'green'} : score >= 70 ? {label:'Compétent',color:'yellow'} : score >= 50 ? {label:'En développement',color:'orange'} : {label:'Insuffisant',color:'red'};
+                const el = document.createElement('div');
+                el.className = 'border border-purple-100 rounded-lg p-4 hover:bg-purple-50 transition-colors';
+                el.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-semibold text-gray-800">${evaluation.employeeName}</h4>
+                            <p class="text-sm text-gray-500">${evaluation.company}</p>
+                            <p class="text-xs text-gray-400 mt-1">Manager: <span class="font-medium">${evaluation.managerName||'-'}</span> — le ${new Date(evaluation.date).toLocaleDateString('fr-FR')}</p>
+                        </div>
+                        <div class="flex items-center gap-3 ml-2">
+                            <div class="text-center">
+                                <div class="text-2xl font-bold text-purple-600">${score.toFixed(1)}%</div>
+                                <div class="text-xs text-gray-400">Score</div>
                             </div>
-                            <div class="flex space-x-2">
-                                <button class="load-evaluation px-3 py-1 bg-blue-500 text-white rounded-md text-sm hover:bg-blue-600" data-id="${evaluation.id}">
-                                    <i class="fas fa-edit mr-1"></i> ${evaluation.status === 'completed' ? 'Voir' : 'Évaluer'}
+                            <div class="flex flex-col gap-1">
+                                <button class="view-auto-eval px-3 py-1 bg-purple-500 text-white rounded-md text-sm hover:bg-purple-600" data-id="${evaluation.id}">
+                                    <i class="fas fa-eye mr-1"></i> Voir
                                 </button>
                                 <button class="delete-evaluation px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600" data-id="${evaluation.id}">
                                     <i class="fas fa-trash mr-1"></i> Supprimer
                                 </button>
                             </div>
                         </div>
-                        <div class="mt-2">
-                            <span class="inline-block px-2 py-1 rounded-full text-xs font-medium ${evaluation.status === 'saved' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">
-                                ${evaluation.status === 'saved' ? 'En attente d\'évaluation' : 'Évaluation terminée'}
-                            </span>
-                            ${evaluation.status === 'completed' ? `<span class="inline-block ml-2 px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">Score: ${evaluation.totalScore?.toFixed(1) || 'N/A'}%</span>` : ''}
-                        </div>
-                    `;
-                    savedList.appendChild(evaluationElement);
-                    // Add event listeners to buttons
-                    evaluationElement.querySelector('.load-evaluation').addEventListener('click', function() {
-                        loadEvaluation(evaluation.id);
-                        hideSavedEvaluations();
-                    });
-                    
-                    evaluationElement.querySelector('.delete-evaluation').addEventListener('click', function() {
-                        if (confirm('Êtes-vous sûr de vouloir supprimer cette évaluation ?')) {
-                            deleteEvaluation(evaluation.id);
-                            renderSavedEvaluations();
-                        }
-                    });
-                });
-            }
-            function loadEvaluation(id) {
-    const savedEvaluations = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
-    const evaluation = savedEvaluations.find(e => e.id == id);
-
-    if (!evaluation) {
-        showAlert('Évaluation non trouvée.', 'error');
-        return;
-    }
-
-    // Remplir les champs du formulaire
-    document.getElementById('manager-name').value = evaluation.managerName;
-    document.getElementById('collaborateur-name').value = evaluation.employeeName;
-    document.getElementById('collaborateur-societe').value = evaluation.company;
-    document.getElementById('evaluation-date').value = evaluation.date;
-
-    // Remplir l'analyse des compétences
-    document.getElementById('strengths').value = evaluation.strengths || '';
-    document.getElementById('weaknesses').value = evaluation.weaknesses || '';
-    document.getElementById('training-proposals').value = evaluation.trainingProposals || '';
-
-    // Charger les objectifs
-    objectives = [...evaluation.objectives];
-    renderObjectives(); // Affiche les objectifs dans le formulaire pour modification
-
-    // Si l'évaluation est terminée, charger les résultats
-    if (evaluation.status === 'completed') {
-        evaluationResults = evaluation.results || [];
-        totalScore = evaluation.totalScore || 0;
-        renderResults(evaluation.employeeName, evaluation.managerName, totalScore);
-        resultsTab.click();
-    } else {
-        // Mettre à jour l'interface utilisateur
-        document.getElementById('page-subtitle').textContent = `Évaluation en cours pour ${evaluation.employeeName}`;
-        objectivesTab.click();
-    }
-
-    showAlert('Évaluation chargée avec succès! Vous pouvez modifier les objectifs.', 'success');
-}
-
-            function deleteEvaluation(id) {
-                let savedEvaluations = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
-                savedEvaluations = savedEvaluations.filter(e => e.id != id);
-                localStorage.setItem('savedEvaluations', JSON.stringify(savedEvaluations));
-                
-                showAlert('Évaluation supprimée avec succès.', 'success');
-            }
-            function resetForm() {
-                // Réinitialiser les champs de l'évaluateur et du collaborateur
-                
-                document.getElementById('collaborateur-name').value = '';
-                document.getElementById('collaborateur-societe').value = '';
-                document.getElementById('evaluation-date').valueAsDate = new Date();
-                
-                // Reset skills analysis
-                document.getElementById('strengths').value = '';
-                document.getElementById('weaknesses').value = '';
-                document.getElementById('training-proposals').value = '';
-                // Réinitialiser les objectifs
-                objectives = [];
-                objectivesContainer.innerHTML = '';
-                addObjective();
-                // Réinitialiser les résultats d'évaluation
-                evaluationResults = [];
-                totalScore = 0;
-                resultsSummary.innerHTML = '';
-                resultsDetails.innerHTML = '';
-
-                
-                document.getElementById('page-subtitle').textContent = 'Définissez les objectifs et évaluez les collaborateurs';
-                objectivesTab.click();
-                // Hide weight summary
-                document.getElementById('weight-summary').classList.add('hidden');
-            }
-            // Tab switching functionality
-            const objectivesTab = document.getElementById('objectives-tab');
-            const evaluationTab = document.getElementById('evaluation-tab');
-            const resultsTab = document.getElementById('results-tab');
-            
-            const objectivesContent = document.getElementById('objectives-content');
-            const evaluationContent = document.getElementById('evaluation-content');
-            const resultsContent = document.getElementById('results-content');
-            
-            objectivesTab.addEventListener('click', () => {
-                objectivesTab.classList.add('border-blue-500', 'text-blue-600', 'bg-blue-50');
-                objectivesTab.classList.remove('border-transparent', 'text-gray-500', 'bg-white');
-                
-                evaluationTab.classList.add('border-transparent', 'text-gray-500', 'bg-white');
-                evaluationTab.classList.remove('border-blue-500', 'text-blue-600', 'bg-blue-50');
-                
-                resultsTab.classList.add('border-transparent', 'text-gray-500', 'bg-white');
-                resultsTab.classList.remove('border-blue-500', 'text-blue-600', 'bg-blue-50');
-                
-                objectivesContent.classList.remove('hidden');
-                evaluationContent.classList.add('hidden');
-                resultsContent.classList.add('hidden');
-            });
-            
-            evaluationTab.addEventListener('click', () => {
-                const managerName = document.getElementById('manager-name').value;
-                if (!managerName) {
-                    showAlert('Veuillez entrer le nom du manager.', 'error');
-                    return;
-                }
-                
-                // Vérification du nombre d'objectifs
-                const objectiveItems = document.querySelectorAll('.objective-item:not(.objective-exceptionnel)');
-                if (objectiveItems.length < 1) {
-                    showAlert('Vous devez définir au moins un objectif avant de passer à l\'évaluation.', 'error');
-                    return;
-                }
-                
-                // Vérification que tous les champs des objectifs sont remplis
-                let allFieldsFilled = true;
-                document.querySelectorAll('.objective-item').forEach(item => {
-                    const description = item.querySelector('.objective-description').value;
-                    const weight = item.querySelector('.objective-weight').value;
-                    const floor = item.querySelector('.objective-floor').value;
-                    const Satisfactory = item.querySelector('.objective-satisfactory').value;
-                    const GoodPerformance = item.querySelector('.objective-goodPerformance').value;
-                    const target = item.querySelector('.objective-target').value;
-                   
-                    
-                    if (!description || !weight || !floor || !Satisfactory || !GoodPerformance || !target) {
-                        allFieldsFilled = false;
+                    </div>
+                    <div class="mt-2 flex items-center gap-2">
+                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Terminée</span>
+                        <span class="px-2 py-1 rounded-full text-xs font-medium bg-${perf.color}-100 text-${perf.color}-800">${perf.label}</span>
+                        <span class="text-xs text-gray-400">${(evaluation.objectives||[]).length} objectif(s)</span>
+                    </div>`;
+                autoevalList.appendChild(el);
+                el.querySelector('.view-auto-eval').addEventListener('click', () => loadAutoEvaluation(evaluation.id));
+                el.querySelector('.delete-evaluation').addEventListener('click', () => {
+                    if (confirm('Supprimer cette évaluation ?')) {
+                        let s = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
+                        s = s.filter(e => e.id != evaluation.id);
+                        localStorage.setItem('savedEvaluations', JSON.stringify(s));
+                        showAlert('Supprimé avec succès.', 'success');
+                        renderSavedEvaluations();
                     }
                 });
-                
-                if (!allFieldsFilled) {
-                    showAlert('Veuillez remplir tous les champs pour chaque objectif avant de passer à l\'évaluation.', 'error');
-                    return;
-                }
-                
-                evaluationTab.classList.add('border-blue-500', 'text-blue-600', 'bg-blue-50');
-                evaluationTab.classList.remove('border-transparent', 'text-gray-500', 'bg-white');
-                
-                objectivesTab.classList.add('border-transparent', 'text-gray-500', 'bg-white');
-                objectivesTab.classList.remove('border-blue-500', 'text-blue-600', 'bg-blue-50');
-                
-                resultsTab.classList.add('border-transparent', 'text-gray-500', 'bg-white');
-                resultsTab.classList.remove('border-blue-500', 'text-blue-600', 'bg-blue-50');
-                
-                evaluationContent.classList.remove('hidden');
-                objectivesContent.classList.add('hidden');
-                resultsContent.classList.add('hidden');
-                
-                renderEvaluationItems();
             });
-            
-            resultsTab.addEventListener('click', () => {
-                resultsTab.classList.add('border-blue-500', 'text-blue-600', 'bg-blue-50');
-                resultsTab.classList.remove('border-transparent', 'text-gray-500', 'bg-white');
-                
-                objectivesTab.classList.add('border-transparent', 'text-gray-500', 'bg-white');
-                objectivesTab.classList.remove('border-blue-500', 'text-blue-600', 'bg-blue-50');
-                
-                evaluationTab.classList.add('border-transparent', 'text-gray-500', 'bg-white');
-                evaluationTab.classList.remove('border-blue-500', 'text-blue-600', 'bg-blue-50');
-                
-                resultsContent.classList.remove('hidden');
-                objectivesContent.classList.add('hidden');
-                evaluationContent.classList.add('hidden');
-            });
-            
-            // Show alert function
-            function showAlert(message, type) {
-                const alertDiv = document.createElement('div');
-                alertDiv.className = `fixed top-4 right-4 p-4 rounded-md shadow-lg z-50 fade-in ${
-                    type === 'error' ? 'bg-red-100 border-l-4 border-red-500 text-red-700' : 
-                    type === 'info' ? 'bg-blue-100 border-l-4 border-blue-500 text-blue-700' :
-                    'bg-green-100 border-l-4 border-green-500 text-green-700'
-                }`;
-                alertDiv.innerHTML = `
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0">
-                            <i class="fas ${type === 'error' ? 'fa-exclamation-circle' : type === 'info' ? 'fa-info-circle' : 'fa-check-circle'} mr-2"></i>
-                        </div>
-                        <div>
-                            <p class="font-medium">${type === 'error' ? 'Erreur' : type === 'info' ? 'Information' : 'Succès'}</p>
-                            <p>${message}</p>
-                        </div>
-                        <button class="ml-4 text-gray-500 hover:text-gray-700" onclick="this.parentElement.parentElement.remove()">
-                            <i class="fas fa-times"></i>
-                        </button>
-                    </div>
-                `;
-                document.body.appendChild(alertDiv);
-                
-                setTimeout(() => {
-                    alertDiv.remove();
-                }, 5000);
-            }
-            // Objectives management
-            let objectives = [];
-            let evaluationResults = [];
-            let totalScore = 0;
-            
-            const objectivesContainer = document.getElementById('objectives-container');
-            const addObjectiveBtn = document.getElementById('add-objective');
-            const addExceptionalBtn = document.getElementById('add-exceptional');
-            const saveObjectivesBtn = document.getElementById('save-objectives');
-            const resetObjectivesBtn = document.getElementById('reset-objectives');
-            const weightSummary = document.getElementById('weight-summary');
-            const totalWeightSpan = document.getElementById('total-weight');
-            const weightStatus = document.getElementById('weight-status');
-            
-            addObjectiveBtn.addEventListener('click', addObjective);
-            addExceptionalBtn.addEventListener('click', addExceptionalObjective);
-            saveObjectivesBtn.addEventListener('click', saveEvaluationToLocalStorage);
-            resetObjectivesBtn.addEventListener('click', resetObjectives);
-              // Function to calculate and display total weight
-              function updateTotalWeight() {
-    const exceptionalObjectives = document.querySelectorAll('.objective-exceptionnel');
-    let maxAllowedWeight = 100;
-
-    if (exceptionalObjectives.length === 1) {
-        exceptionalObjectives[0].querySelector('.objective-weight').value = 20; // Fix weight to 20%
-        maxAllowedWeight = 120;
-    } else if (exceptionalObjectives.length === 2) {
-        exceptionalObjectives.forEach(obj => {
-            obj.querySelector('.objective-weight').value = 10; // Fix weight to 10% each
-        });
-        maxAllowedWeight = 120;
+        }
     }
 
-    const totalWeight = Array.from(document.querySelectorAll('.objective-item')).reduce((sum, item) => {
-        return sum + parseInt(item.querySelector('.objective-weight').value || 0);
-    }, 0);
-
-    totalWeightSpan.textContent = `${totalWeight}%`;
-
-    // Show/hide weight summary
-    if (document.querySelectorAll('.objective-item').length > 0) {
-        weightSummary.classList.remove('hidden');
-    } else {
-        weightSummary.classList.add('hidden');
-    }
-
-    // Update status message and styling
-    if (totalWeight > maxAllowedWeight) {
-        weightSummary.classList.add('weight-warning');
-        weightStatus.innerHTML = `<span class="text-red-500"><i class="fas fa-exclamation-circle mr-1"></i>Dépassement de ${totalWeight - maxAllowedWeight}% (max ${maxAllowedWeight}%)</span>`;
-    } else if (totalWeight < maxAllowedWeight) {
-        weightSummary.classList.remove('weight-warning');
-        weightStatus.innerHTML = `<span class="text-yellow-500"><i class="fas fa-info-circle mr-1"></i>Il reste ${maxAllowedWeight - totalWeight}% à attribuer</span>`;
-    } else {
-        weightSummary.classList.remove('weight-warning');
-        weightStatus.innerHTML = `<span class="text-green-500"><i class="fas fa-check-circle mr-1"></i>Poids total correct (${maxAllowedWeight}%)</span>`;
-    }
-}
-            
-            // Add event listeners to all weight inputs
-            function setupWeightInputListeners() {
-                document.querySelectorAll('.objective-weight').forEach(input => {
-                    input.addEventListener('input', updateTotalWeight);
-                });
-            }
-            
-            function updateObjectiveNumbers() {
-                const objectiveItems = document.querySelectorAll('.objective-item:not(.objective-exceptionnel)');
-                objectiveItems.forEach((item, index) => {
-                    const title = item.querySelector('h3');
-                    if (title) {
-                        title.innerHTML = `<i class="fas fa-bullseye mr-2 text-blue-500"></i>Objectif ${index + 1}`;
-                    }
-                });
-                
-                const exceptionalObjective = document.querySelector('.objective-exceptionnel');
-                if (exceptionalObjective) {
-                    const title = exceptionalObjective.querySelector('h3');
-                    if (title) {
-                        title.innerHTML = `<i class="fas fa-star mr-2 text-purple-500"></i>Objectif Exceptionnel`;
-                    }
-                }
-                
-                // Update total weight display
-                updateTotalWeight();
-            }
-            
-            function addObjective() {
-                const objectiveItems = document.querySelectorAll('.objective-item:not(.objective-exceptionnel)');
-                if (objectiveItems.length >= 6) {
-                    showAlert('Vous ne pouvez pas ajouter plus de 6 objectifs.', 'error');
-                    return;
-                }
-                
-                const objectiveId = Date.now();
-                
-                const objectiveElement = document.createElement('div');
-                objectiveElement.className = 'objective-item mb-6 p-4 border rounded-md bg-gray-50 fade-in';
-                objectiveElement.dataset.id = objectiveId;
-                
-                objectiveElement.innerHTML = `
-                    <div class="flex justify-between items-center mb-3">
-                        <h3 class="font-medium text-gray-700 flex items-center">
-                            <i class="fas fa-bullseye mr-2 text-blue-500"></i>Objectif ${objectiveItems.length + 1}
-                        </h3>
-                        <button class="delete-objective text-red-500 hover:text-red-700 transition-colors">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                    <div class="mb-3">
-                        <label class="block text-gray-700 mb-1">Description de l'objectif</label>
-                        <input type="text" class="objective-description w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Décrivez l'objectif">
-                    </div>
-                    <div class="mb-3">
-                        <label class="block text-gray-700 mb-1">Poids (%)</label>
-                        <div class="relative">
-                            <input type="number" min="1" max="100" class="objective-weight w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="10">
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                <span class="text-gray-500">%</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                        <div>
-                            <label class="block text-gray-700 mb-1">Seuil de départ </label>
-                            <input type="text" class="objective-floor w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 25 ventes">
-                        </div>
-                        <div>
-                            <label class="block text-gray-700 mb-1">Satisfaisant </label>
-                            <input type="text" class="objective-satisfactory w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 50 ventes">
-                        </div>
-                       
-                        <div>
-                            <label class="block text-gray-700 mb-1">Bonne performance </label>
-                            <input type="text" class="objective-goodPerformance w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 75 ventes">
-                        </div>
-
-                         <div>
-                            <label class="block text-gray-700 mb-1">Cible </label>
-                            <input type="text" class="objective-target w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 100 ventes">
-                        </div>
-                    </div>
-                `;
-                
-                objectivesContainer.appendChild(objectiveElement);
-                
-                // Add delete event listener
-                const deleteBtn = objectiveElement.querySelector('.delete-objective');
-                deleteBtn.addEventListener('click', () => {
-                    if (objectivesContainer.children.length <= 1) {
-                        showAlert('Vous devez avoir au moins 1 objectif.', 'error');
-                        return;
-                    }
-                    objectiveElement.remove();
-                    // Update numbers for remaining objectives
-                    updateObjectiveNumbers();
-                });
-                
-                // Add weight input listener
-                objectiveElement.querySelector('.objective-weight').addEventListener('input', updateTotalWeight);
-                
-                // Update numbers
-                updateObjectiveNumbers();
-            }
-            
-            function addExceptionalObjective() {
-    const exceptionalObjectives = document.querySelectorAll('.objective-exceptionnel');
-    if (exceptionalObjectives.length >= 2) {
-        showAlert('Vous ne pouvez pas ajouter plus de 2 objectifs exceptionnels.', 'error');
-        return;
-    }
-
-    const objectiveId = Date.now();
-
-    const objectiveElement = document.createElement('div');
-    objectiveElement.className = 'objective-item objective-exceptionnel mb-6 p-4 border rounded-md bg-gray-50 fade-in';
-    objectiveElement.dataset.id = objectiveId;
-
-    objectiveElement.innerHTML = `
-        <div class="flex justify-between items-center mb-3">
-            <h3 class="font-medium text-gray-700 flex items-center">
-                <i class="fas fa-star mr-2 text-purple-500"></i>Objectif Exceptionnel
-            </h3>
-            <button class="delete-objective text-red-500 hover:text-red-700 transition-colors">
-                <i class="fas fa-trash"></i>
-            </button>
-        </div>
-        <div class="mb-3">
-            <label class="block text-gray-700 mb-1">Description de l'objectif</label>
-            <input type="text" class="objective-description w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Décrivez l'objectif exceptionnel">
-        </div>
-        <div class="mb-3">
-            <label class="block text-gray-700 mb-1">Poids (%) <span class="text-xs text-gray-500">(sera ajusté automatiquement)</span></label>
-            <div class="relative">
-                <input type="number" min="1" max="20" class="objective-weight w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="10" readonly>
-                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                    <span class="text-gray-500">%</span>
-                </div>
-            </div>
-        </div>
-    `;
-
-    objectivesContainer.appendChild(objectiveElement);
-
-    // Ajouter un écouteur pour le bouton de suppression
-    const deleteBtn = objectiveElement.querySelector('.delete-objective');
-    deleteBtn.addEventListener('click', () => {
-        objectiveElement.remove();
-        updateTotalWeight();
-    });
-
-    // Mettre à jour les poids
-    updateTotalWeight();
-}
-            
-            function resetObjectives() {
-                if (confirm('Êtes-vous sûr de vouloir réinitialiser tous les objectifs ?')) {
-                    objectivesContainer.innerHTML = '';
-                    objectives = [];
-                    // Add 1 default objective
-                    addObjective();
-                    showAlert('Tous les objectifs ont été réinitialisés.', 'success');
-                }
-            }
-            
-            function renderObjectives() {
-                objectivesContainer.innerHTML = '';
-                
-                objectives.forEach((objective, index) => {
-                    const objectiveId = objective.id;
-                    
-                    const objectiveElement = document.createElement('div');
-                    objectiveElement.className = `objective-item mb-6 p-4 border rounded-md bg-gray-50 fade-in ${objective.isExceptional ? 'objective-exceptionnel' : ''}`;
-                    objectiveElement.dataset.id = objectiveId;
-                    
-                    objectiveElement.innerHTML = `
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="font-medium text-gray-700 flex items-center">
-                                <i class="${objective.isExceptional ? 'fas fa-star mr-2 text-purple-500' : 'fas fa-bullseye mr-2 text-blue-500'}"></i>
-                                ${objective.isExceptional ? 'Objectif Exceptionnel' : `Objectif ${index + 1}`}
-                            </h3>
-                            <button class="delete-objective text-red-500 hover:text-red-700 transition-colors">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                        <div class="mb-3">
-                            <label class="block text-gray-700 mb-1">Description de l'objectif</label>
-                            <input type="text" class="objective-description w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" value="${objective.description}">
-                        </div>
-                        <div class="mb-3">
-                            <label class="block text-gray-700 mb-1">Poids (%) ${objective.isExceptional ? '<span class="text-xs text-gray-500">(max 10%)</span>' : ''}</label>
-                            <div class="relative">
-                                <input type="number" min="1" max="${objective.isExceptional ? '10' : '100'}" class="objective-weight w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" value="${objective.weight}">
-                                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                                    <span class="text-gray-500">%</span>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-3">
-                            <div>
-                                <label class="block text-gray-700 mb-1">Seuil de départ </label>
-                                <input type="text" class="objective-floor w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" value="${objective.floor}">
-                            </div>
-                             <div>
-                                <label class="block text-gray-700 mb-1">Satisfaisant </label>
-                                <input type="text" class="objective-satisfactory w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" value="${objective.satisfactory}">
-                            </div>
-                           
-                            <div>
-                                <label class="block text-gray-700 mb-1">Bonne performance </label>
-                                <input type="text" class="objective-goodPerformance w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" value="${objective.goodPerformance}">
-                            </div>
-                             <div>
-                                <label class="block text-gray-700 mb-1">Cible </label>
-                                <input type="text" class="objective-target w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" value="${objective.target}">
-                            </div>
-                        </div>
-                    `;
-                    
-                    objectivesContainer.appendChild(objectiveElement);
-                    
-                    // Add delete event listener
-                    const deleteBtn = objectiveElement.querySelector('.delete-objective');
-                    deleteBtn.addEventListener('click', () => {
-                        if (!objective.isExceptional && objectivesContainer.querySelectorAll('.objective-item:not(.objective-exceptionnel)').length <= 1) {
-                            showAlert('Vous devez avoir au moins 1 objectif.', 'error');
-                            return;
-                        }
-                        objectiveElement.remove();
-                        // Update numbers for remaining objectives
-                        updateObjectiveNumbers();
-                    });
-                    
-                    // Add weight input listener
-                    objectiveElement.querySelector('.objective-weight').addEventListener('input', updateTotalWeight);
-                });
-                
-                // Update numbers
-                updateObjectiveNumbers();
-            }
-            
-            // Evaluation functionality
-            const evaluationContainer = document.getElementById('evaluation-container');
-            const calculateScoreBtn = document.getElementById('calculate-score');
-            
-            calculateScoreBtn.addEventListener('click', calculateScore);
-            
-            function renderEvaluationItems() {
-    evaluationContainer.innerHTML = '';
-    
-    objectives.forEach((objective, index) => {
-        const evaluationItem = document.createElement('div');
-        evaluationItem.className = `evaluation-item mb-6 p-4 border rounded-md ${objective.isExceptional ? 'bg-purple-50' : 'bg-white'} fade-in`;
-        evaluationItem.dataset.id = objective.id;
-        
-        evaluationItem.innerHTML = `
-            <div class="mb-3">
-                <h3 class="font-medium text-gray-700 flex items-center">
-                    <i class="${objective.isExceptional ? 'fas fa-star mr-2 text-purple-500' : 'fas fa-bullseye mr-2 text-blue-500'}"></i>
-                    ${objective.isExceptional ? 'Objectif Exceptionnel' : `Objectif ${index + 1}`}: ${objective.description}
-                </h3>
-                <div class="flex flex-wrap items-center text-sm text-gray-500 mt-1">
-                    <span class="mr-3"><span class="font-medium">Poids:</span> ${objective.weight}%</span>
-                    <span class="mr-3"><span class="font-medium">Seuil de départ:</span> ${objective.floor}</span>
-                    <span class="mr-3"><span class="font-medium">Satisfaisant :</span> ${objective.satisfactory}</span>
-                    <span><span class="font-medium">Bonne performance:</span> ${objective.goodPerformance}</span>
-                    <span class="mr-3"><span class="font-medium">Cible:</span> ${objective.target}</span>
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="block text-gray-700 mb-2">Résultat Obtenu</label>
-                <div class="grid grid-cols-1 sm:grid-cols-${objective.isExceptional ? '5' : '5'} gap-2">
-                    <div class="achievement-level text-center p-2 border rounded-md" data-level="0">
-                        <div class="text-xs font-semibold text-red-500">Non Atteint</div>
-                        <div class="text-sm">0%</div>
-                    </div>
-                    <div class="achievement-level text-center p-2 border rounded-md" data-level="25">
-                        <div class="text-xs font-semibold text-orange-500">Avancement limité</div>
-                        <div class="text-sm">25%</div>
-                    </div>
-                    <div class="achievement-level text-center p-2 border rounded-md" data-level="50">
-                        <div class="text-xs font-semibold text-yellow-500">Réalisation incomplète</div>
-                        <div class="text-sm">50%</div>
-                    </div>
-                    <div class="achievement-level text-center p-2 border rounded-md" data-level="75">
-                        <div class="text-xs font-semibold text-blue-500">Résultat satisfaisant</div>
-                        <div class="text-sm">75%</div>
-                    </div>
-                    <div class="achievement-level text-center p-2 border rounded-md" data-level="100">
-                        <div class="text-xs font-semibold text-green-500">Atteint</div>
-                        <div class="text-sm">100%</div>
-                    </div>
-                </div>
-            </div>
-            <div class="mb-3">
-                <label class="block text-gray-700 mb-2">Valeur Réelle Obtenue</label>
-                <input type="text" class="actual-value w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Entrez la valeur réelle (ex: 85 ventes)">
-            </div>
-            <div class="mb-3">
-                <label class="block text-gray-700 mb-2">Commentaires</label>
-                <textarea class="comments w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" rows="2" placeholder="Ajoutez des commentaires sur cet objectif"></textarea>
-            </div>
-        `;
-        
-        evaluationContainer.appendChild(evaluationItem);
-        
-        // Add event listeners for achievement levels
-        const levels = evaluationItem.querySelectorAll('.achievement-level');
-        levels.forEach(level => {
-            level.addEventListener('click', function() {
-                // Remove selected class from all levels in this item
-                levels.forEach(l => l.classList.remove('selected'));
-                
-                // Add selected class to clicked level
-                this.classList.add('selected');
-            });
-        });
-    });
-}
-            
-            function calculateScore() {
-                const employeeName = document.getElementById('collaborateur-name').value;
-                const managerName = document.getElementById('manager-name').value;
-                const company = document.getElementById('collaborateur-societe').value;
-                const date = document.getElementById('evaluation-date').value;
-                
-                if (!employeeName) {
-                    showAlert('Veuillez entrer le nom du collaborateur.', 'error');
-                    return;
-                }
-                
-                if (!managerName) {
-                    showAlert('Veuillez entrer le nom du manager.', 'error');
-                    return;
-                }
-                
-                evaluationResults = [];
-                totalScore = 0;
-                let hasError = false;
-                
-                const evaluationItems = document.querySelectorAll('.evaluation-item');
-                
-                evaluationItems.forEach(item => {
-                    const objectiveId = item.dataset.id;
-                    const objective = objectives.find(obj => obj.id == objectiveId);
-                    
-                    const selectedLevel = item.querySelector('.achievement-level.selected');
-                    const actualValue = item.querySelector('.actual-value').value;
-                    const comments = item.querySelector('.comments').value;
-                    
-                    if (!selectedLevel || !actualValue) {
-                        showAlert('Veuillez sélectionner un niveau d\'atteinte et entrer une valeur réelle pour tous les objectifs.', 'error');
-                        hasError = true;
-                        return;
-                    }
-                    
-                    let achievementPercentage = parseInt(selectedLevel.dataset.level);
-                    
-                    // For exceptional objectives, we can go up to 150%
-                    if (objective.isExceptional && achievementPercentage > 120) {
-                        achievementPercentage = Math.min(achievementPercentage, 150);
-                    }
-                    
-                    const score = (achievementPercentage / 100) * objective.weight;
-                    
-                    evaluationResults.push({
-                        objectiveId,
-                        description: objective.description,
-                        weight: objective.weight,
-                        actualValue,
-                        achievementPercentage,
-                        score,
-                        comments,
-                        isExceptional: objective.isExceptional
-                    });
-                    
-                    totalScore += score;
-                });
-                
-                if (hasError) return;
-                
-                // Get skills analysis data
-                const strengths = document.getElementById('strengths').value;
-                const weaknesses = document.getElementById('weaknesses').value;
-                const trainingProposals = document.getElementById('training-proposals').value;
-                
-                // Save evaluation with results to local storage
-                let savedEvaluations = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
-                
-                // Check if this evaluation already exists
-                const existingIndex = savedEvaluations.findIndex(e => 
-                    e.employeeName === employeeName && 
-                    e.managerName === managerName && 
-                    e.date === date
-                );
-                
-                if (existingIndex !== -1) {
-                    // Update existing evaluation
-                    savedEvaluations[existingIndex].results = evaluationResults;
-                    savedEvaluations[existingIndex].totalScore = totalScore;
-                    savedEvaluations[existingIndex].strengths = strengths;
-                    savedEvaluations[existingIndex].weaknesses = weaknesses;
-                    savedEvaluations[existingIndex].trainingProposals = trainingProposals;
-                    savedEvaluations[existingIndex].status = 'completed';
-                } else {
-                    // Create new evaluation with results
-                    savedEvaluations.push({
-                        id: Date.now(),
-                        managerName,
-                        employeeName,
-                        company,
-                        date,
-                        objectives,
-                        results: evaluationResults,
-                        totalScore,
-                        strengths,
-                        weaknesses,
-                        trainingProposals,
-                        status: 'completed'
-                    });
-                }
-                
-                localStorage.setItem('savedEvaluations', JSON.stringify(savedEvaluations));
-                
-                // Render results
-                renderResults(employeeName, managerName, totalScore);
-                resultsTab.click();
-                
-                showAlert('Évaluation terminée et sauvegardée avec succès!', 'success');
-            }
-            
-            // Results functionality
-            const resultsSummary = document.getElementById('results-summary');
-            const resultsDetails = document.getElementById('results-details');
-            const newEvaluationBtn = document.getElementById('new-evaluation');
-            const printResultsBtn = document.getElementById('print-results');
-            const exportPdfBtn = document.getElementById('export-pdf');
-            const saveAnalysisBtn = document.getElementById('save-analysis');
-            
-            newEvaluationBtn.addEventListener('click', resetForm);
-            
-            printResultsBtn.addEventListener('click', () => {
-                window.print();
-            });
-            
-        
-            
-            saveAnalysisBtn.addEventListener('click', () => {
-                const employeeName = document.getElementById('collaborateur-name').value;
-                const managerName = document.getElementById('manager-name').value;
-                const date = document.getElementById('evaluation-date').value;
-                
-                if (!employeeName || !managerName || !date) {
-                    showAlert('Veuillez remplir tous les champs avant de sauvegarder.', 'error');
-                    return;
-                }
-                
-                // Get skills analysis data
-                const strengths = document.getElementById('strengths').value;
-                const weaknesses = document.getElementById('weaknesses').value;
-                const trainingProposals = document.getElementById('training-proposals').value;
-                
-                // Update in local storage
-                let savedEvaluations = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
-                const evaluationIndex = savedEvaluations.findIndex(e => 
-                    e.employeeName === employeeName && 
-                    e.managerName === managerName && 
-                    e.date === date
-                );
-                
-                if (evaluationIndex !== -1) {
-                    savedEvaluations[evaluationIndex].strengths = strengths;
-                    savedEvaluations[evaluationIndex].weaknesses = weaknesses;
-                    savedEvaluations[evaluationIndex].trainingProposals = trainingProposals;
-                    localStorage.setItem('savedEvaluations', JSON.stringify(savedEvaluations));
-                    
-                    showAlert('Analyse des compétences sauvegardée avec succès!', 'success');
-                } else {
-                    showAlert('Évaluation non trouvée. Veuillez d\'abord enregistrer l\'évaluation.', 'error');
-                }
-            });
-            
-            function getPerformanceLevel(score) {
-                if (score < 50) return { level: 'Insuffisant', color: 'red' };
-                if (score < 70) return { level: 'En développement', color: 'orange' };
-                if (score < 90) return { level: 'Compétent', color: 'yellow' };
-                if (score < 110) return { level: 'Très compétent', color: 'green' };
-                return { level: 'Exceptionnel', color: 'blue' };
-            }
-            
-            function renderResults(employeeName, managerName, totalScore) {
-                const performance = getPerformanceLevel(totalScore);
-                
-                // Summary
-                resultsSummary.innerHTML = `
-               <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-    <div class="mb-4 md:mb-0">
-        <h3 class="text-lg font-semibold text-gray-800">Résumé de l'Évaluation</h3>
-        <p class="text-gray-600">Manager: <span class="font-medium">${managerName}</span></p>
-        <p class="text-gray-600">Collaborateur: <span class="font-medium">${employeeName}</span></p>
-        <p class="text-gray-600">Date: <span class="font-medium">${new Date().toLocaleDateString('fr-FR')}</span></p>
-    </div>
-    <div class="flex justify-center items-center h-full mt-4">
-        <div class="text-center">
-            <div class="text-4xl font-bold text-blue-600">${totalScore.toFixed(1)}%</div>
-            <div class="text-sm text-gray-500">Score Final</div>
-            <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium bg-${performance.color}-100 text-${performance.color}-800">
-                ${performance.level}
-            </span>
-        </div>
-     
-    </div>
-
-    <div>
-    </div>
-    
-    <div>
-    
-    </div>
+    function loadEvaluation(id) {
+        const saved = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
+        const evaluation = saved.find(e => e.id == id);
+        if (!evaluation) { showAlert('Évaluation non trouvée.', 'error'); return; }
+        document.getElementById('manager-name').value = evaluation.managerName;
+        document.getElementById('collaborateur-name').value = evaluation.employeeName;
+        document.getElementById('collaborateur-societe').value = evaluation.company;
+        document.getElementById('evaluation-date').value = evaluation.date;
+           // Remplir l'analyse des compétences
    
-</div>
-                    <div class="mt-4">
-                        <div class="flex justify-between text-sm text-gray-600 mb-1">
-                            <span>0%</span>
-                            
-                            <span>120%</span>
-                        </div>
-    <div class="progress-bar">
-    <div class="progress-fill bg-blue-500" 
-         style="width: ${Math.min(totalScore / 1.2, 100)}%; background-color: ${totalScore > 100 ? 'green' : 'blue'};">
-    </div>
-</div>
-                `;
-                
-                // Details
-                resultsDetails.innerHTML = `
-                    <h3 class="text-lg font-semibold text-gray-800 mb-4">Détails par Objectif</h3>
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full bg-white border">
-                            <thead>
-                                <tr class="bg-gray-100 text-gray-700">
-                                    <th class="py-3 px-4 text-left">Objectif</th>
-                                    <th class="py-3 px-4 text-center">Poids</th>
-                                    <th class="py-3 px-4 text-center">Valeur Réelle</th>
-                                    <th class="py-3 px-4 text-center">Atteinte</th>
-                                    <th class="py-3 px-4 text-center">Score</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${evaluationResults.map((result, index) => `
-                                    <tr class="border-b ${result.isExceptional ? 'bg-purple-50' : ''}">
-                                        <td class="py-3 px-4">
-                                            <div class="font-medium flex items-center">
-                                                ${result.isExceptional ? '<i class="fas fa-star mr-2 text-purple-500"></i>' : ''}
-                                                ${result.isExceptional ? 'Objectif Exceptionnel' : `Objectif ${index + 1}`}
-                                            </div>
-                                            <div class="text-sm text-gray-500">${result.description}</div>
-                                            ${result.comments ? `<div class="mt-1 text-xs text-gray-400"><i class="fas fa-comment mr-1"></i>${result.comments}</div>` : ''}
-                                        </td>
-                                        <td class="py-3 px-4 text-center">${result.weight}%</td>
-                                        <td class="py-3 px-4 text-center">${result.actualValue}</td>
-                                        <td class="py-3 px-4 text-center">
-                                            <span class="inline-block px-2 py-1 rounded-full text-xs font-medium 
-                                                ${result.achievementPercentage === 0 ? 'bg-red-100 text-red-800' : 
-                                                  result.achievementPercentage === 25 ? 'bg-blue-100 text-orange-800' : 
-                                                  result.achievementPercentage === 50 ? 'bg-orange-100 text-yallow-800' : 
-                                                  result.achievementPercentage === 75 ? 'bg-yellow-100 text-blue-800' : 
-                                                  result.achievementPercentage === 100 ? 'bg-green-100 text-green-800' : 
-                                                 
-                                                  'bg-purple-100 text-purple-800'}">
-                                                ${result.achievementPercentage}%
-                                            </span>
-                                        </td>
-                                        <td class="py-3 px-4 text-center font-medium">${result.score.toFixed(1)}%</td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                            <tfoot class="bg-gray-50">
-                                <tr>
-                                    <td class="py-3 px-4 text-right font-medium" colspan="4">Score Total:</td>
-                                    <td class="py-3 px-4 text-center font-bold text-blue-600">${totalScore.toFixed(1)}%</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    </div>
-                `;
- 
-            }
- 
-            // Initialize with 1 objective
-            addObjective();
- document.getElementById("share-rh").addEventListener("click", function () {
-    if (!evaluationResults || evaluationResults.length === 0) {
-        alert("Aucun résultat d'évaluation à partager.");
-        return;
+        objectives = [...evaluation.objectives];
+        renderObjectives();
+        showPage('page-fixation');
+        showAlert('Objectifs chargés avec succès!', 'success');
     }
-    const collaborateurName = document.getElementById("collaborateur-name").value || 'Collaborateur';
-    const collaborateurSociete = document.getElementById("collaborateur-societe").value || 'Société inconnue';
-    const managerName = document.getElementById("manager-name").value || 'Manager';
-    const finalScore = evaluationResults.reduce((acc, obj) => acc + obj.score, 0) / evaluationResults.length;
-    const strengths = document.getElementById("strengths").value || 'Non renseigné';
-    const weaknesses = document.getElementById("weaknesses").value || 'Non renseigné';
-    const trainingProposals = document.getElementById("training-proposals").value || 'Non renseigné';
-    const wb = XLSX.utils.book_new();
-    // Construire la feuille unique
-    const combinedData = [
-        ['Nom du Collaborateur', collaborateurName],
-        ['Société', collaborateurSociete],
-        ['Nom du Manager', managerName],
-        ['Score Final (%)', totalScore.toFixed(1)],
-        ['Points Forts', strengths],
-        ['Axes d’Amélioration', weaknesses],
-        ['Formations Proposées', trainingProposals],
-        [],
-        ['Détails par Objectif'],
-    ];
-    // Ajouter les colonnes d'entête
-    combinedData.push([
-        'Objectif',
-        'Poids (%)',
-        'Valeur Réelle',
-        'Atteinte (%)',
-        'Score Obtenu (%)',
-        'Commentaires'
-    ]);
-    // Ajouter chaque objectif
-    evaluationResults.forEach(obj => {
-        combinedData.push([
-            obj.description,
-            obj.weight,
-            obj.actualValue,
-            obj.achievementPercentage,
-            obj.score.toFixed(1),
-            obj.comments
-        ]);
+
+    function loadAutoEvaluation(id) {
+        const saved = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
+        const evaluation = saved.find(e => e.id == id);
+        if (!evaluation) { showAlert('Évaluation non trouvée.', 'error'); return; }
+        document.getElementById('auto-collab-name').value = evaluation.employeeName;
+        document.getElementById('auto-manager-name').value = evaluation.managerName || '';
+        document.getElementById('auto-societe').value = evaluation.company;
+        document.getElementById('auto-eval-date').value = evaluation.date;
+        document.getElementById('auto-general-comments').value = evaluation.generalComments || '';
+        document.getElementById('strengths').value = evaluation.strengths || '';
+        document.getElementById('weaknesses').value = evaluation.weaknesses || '';
+        document.getElementById('training-proposals').value = evaluation.trainingProposals || '';
+        document.getElementById('auto-evaluation-container').classList.remove('hidden');
+        autoRenderEvaluationItems(evaluation.objectives);
+        if (evaluation.results) {
+            evaluation.results.forEach((result, index) => {
+                const item = document.querySelectorAll('#auto-evaluation-items-container .evaluation-item')[index];
+                if (item) {
+                    const level = item.querySelector(`.achievement-level[data-level="${result.achievementPercentage}"]`);
+                    if (level) level.classList.add('selected');
+                    item.querySelector('.actual-value').value = result.actualValue || '';
+                    item.querySelector('.comments').value = result.comments || '';
+                }
+            });
+            autoEvaluationResults = evaluation.results;
+            autoTotalScore = evaluation.totalScore;
+            autoRenderResults(evaluation.employeeName, evaluation.managerName || '', evaluation.totalScore);
+            document.getElementById('auto-results-tab').click();
+        }
+        showPage('page-auto-eval');
+        showAlert('Évaluation chargée.', 'success');
+    }
+
+    // =============================================
+    // MODULE 3 : AUTO-ÉVALUATION
+    // =============================================
+    const autoFileUploadArea = document.getElementById('auto-file-upload-area');
+    const autoFileInput = document.getElementById('auto-file-input');
+    const autoFileInfo = document.getElementById('auto-file-info');
+    const autoFileNameEl = document.getElementById('auto-file-name');
+
+    autoFileUploadArea.addEventListener('dragover', e => { e.preventDefault(); autoFileUploadArea.classList.add('active'); });
+    autoFileUploadArea.addEventListener('dragleave', () => autoFileUploadArea.classList.remove('active'));
+    autoFileUploadArea.addEventListener('drop', e => {
+        e.preventDefault(); autoFileUploadArea.classList.remove('active');
+        if (e.dataTransfer.files.length) { autoFileInput.files = e.dataTransfer.files; autoHandleFileUpload(); }
     });
-    const sheet = XLSX.utils.aoa_to_sheet(combinedData);
-    XLSX.utils.book_append_sheet(wb, sheet, "Évaluation complète");
-    const date = new Date().toISOString().split("T")[0];
-    const fileName = `Resultats_Performance_${collaborateurName.replace(/\s+/g, '_')}_${date}.xlsx`;
-    XLSX.writeFile(wb, fileName);
-    // 2. Prépare l'email via Outlook ou client par défaut
-    const to = `${collaborateurName},rh.performance@orbisholding.ma`; // Change cette adresse RH
-    const subject = encodeURIComponent(`Evaluation  - ${collaborateurName}`);
-        const nomCollaborateur = document.getElementById("collaborateur-name").value;
-const body = `
- Bonjour,%0D%0A%0D%0A
-  Veuillez trouver ci-joint les résultats de l’évaluation de ${nomCollaborateur}.%0D%0A%0D%0A
-  Bien cordialement.
-`;
-  alert(" Le fichier Excel a été téléchargé. Un e-mail est prêt. Veuillez y joindre le fichier, puis le transmettre au collaborateur et aux RH.");
-    // 3. Ouvre Outlook (ou le mail par défaut)
-    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
-});
- // A. Partager les objectifs
- document.getElementById("send-objectives-rh").addEventListener("click", function () {
-    const managerName = document.getElementById('manager-name').value.trim();
-    console.log('Manager:', managerName);
-    if (!managerName) {
-        showAlert('Veuillez renseigner le nom du manager.', 'error');
-        return;
+    autoFileInput.addEventListener('change', autoHandleFileUpload);
+    document.getElementById('auto-remove-file').addEventListener('click', () => {
+        autoFileInput.value = ''; autoFileInfo.classList.add('hidden');
+        document.getElementById('auto-evaluation-container').classList.add('hidden');
+    });
+
+    function autoHandleFileUpload() {
+        const file = autoFileInput.files[0];
+        if (!file) return;
+        autoFileNameEl.textContent = file.name;
+        autoFileInfo.classList.remove('hidden');
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 });
+            const { objectives, collaborateurName, managerName, societe } = autoProcessExcelData(jsonData);
+            if (collaborateurName) document.getElementById('auto-collab-name').value = collaborateurName;
+            if (managerName) document.getElementById('auto-manager-name').value = managerName;
+            if (societe) document.getElementById('auto-societe').value = societe;
+            if (objectives.length > 0) {
+                document.getElementById('auto-evaluation-container').classList.remove('hidden');
+                autoRenderEvaluationItems(objectives);
+                document.getElementById('auto-evaluation-tab').click();
+                showAlert('Fichier importé avec succès!', 'success');
+            } else {
+                showAlert('Aucun objectif trouvé dans le fichier.', 'error');
+            }
+        };
+        reader.readAsArrayBuffer(file);
     }
 
-    const collaborateurName = document.getElementById("collaborateur-name").value.trim();
-    const collaborateurSociete = document.getElementById("collaborateur-societe").value.trim();
-
-    if (!collaborateurName || !collaborateurSociete) {
-        showAlert('Veuillez remplir tous les champs obligatoires.', 'error');
-        return;
+    function autoProcessExcelData(data) {
+        const objectives = [];
+        let collaborateurName = '', managerName = '', societe = '', header = null;
+        for (let i = 0; i < data.length; i++) {
+            const row = data[i];
+            if (!row || row.length === 0) continue;
+            if (!header) { header = row.map(h => h ? h.toString().trim().toLowerCase() : ""); continue; }
+            const obj = {};
+            header.forEach((col, idx) => {
+                if (!col) return;
+                const val = row[idx] ? row[idx].toString().trim() : "";
+                switch(col) {
+                    case "nom de collaborateur": obj.collaborateurName = val; break;
+                    case "société": obj.societe = val; break;
+                    case "nom du manager": obj.managerName = val; break;
+                    case "objectif": obj.description = val; break;
+                    case "poids (%)": obj.weight = parseFloat(row[idx]) || 0; break;
+                    case "seuil de départ": obj.floor = val; break;
+                    case "satisfaisant": obj.satisfactory = val; break;
+                    case "satisfaisant ": obj.satisfactory = val; break;
+                    case "bonne performance": obj.goodPerformance = val; break;
+                    case "cible": obj.target = val; break;
+                }
+            });
+            if (!collaborateurName && obj.collaborateurName) collaborateurName = obj.collaborateurName;
+            if (!managerName && obj.managerName) managerName = obj.managerName;
+            if (!societe && obj.societe) societe = obj.societe;
+            if (obj.description) objectives.push(obj);
+        }
+        return { objectives, collaborateurName, managerName, societe };
     }
 
-    const objectives = [];
-    let allObjectivesValid = true;
+    // Tabs auto-eval
+    const autoEvalTab = document.getElementById('auto-evaluation-tab');
+    const autoResultsTab = document.getElementById('auto-results-tab');
+    const autoEvalContent = document.getElementById('auto-evaluation-content');
+    const autoResultsContent = document.getElementById('auto-results-content');
 
-    document.querySelectorAll('.objective-item').forEach(item => {
-        if (!allObjectivesValid) return; // Stop loop si erreur détectée
+    autoEvalTab.addEventListener('click', () => {
+        autoEvalTab.classList.add('border-blue-500','text-blue-600','bg-blue-50'); autoEvalTab.classList.remove('border-transparent','text-gray-500');
+        autoResultsTab.classList.remove('border-blue-500','text-blue-600','bg-blue-50'); autoResultsTab.classList.add('border-transparent','text-gray-500');
+        autoEvalContent.classList.remove('hidden'); autoResultsContent.classList.add('hidden');
+    });
+    autoResultsTab.addEventListener('click', () => {
+        autoResultsTab.classList.add('border-blue-500','text-blue-600','bg-blue-50'); autoResultsTab.classList.remove('border-transparent','text-gray-500');
+        autoEvalTab.classList.remove('border-blue-500','text-blue-600','bg-blue-50'); autoEvalTab.classList.add('border-transparent','text-gray-500');
+        autoResultsContent.classList.remove('hidden'); autoEvalContent.classList.add('hidden');
+    });
 
-        const description = item.querySelector('.objective-description').value.trim();
-        const weight = parseInt(item.querySelector('.objective-weight').value || '0');
-        const isExceptional = item.classList.contains('objective-exceptionnel');
+    let autoCurrentObjectives = [], autoEvaluationResults = [], autoTotalScore = 0;
 
-        if (!description || !weight) {
-            showAlert('Veuillez remplir tous les champs pour chaque objectif.', 'error');
-            allObjectivesValid = false;
+    function autoRenderEvaluationItems(objectives) {
+        autoCurrentObjectives = objectives;
+        const container = document.getElementById('auto-evaluation-items-container');
+        container.innerHTML = '';
+        objectives.forEach((objective, index) => {
+            const item = document.createElement('div');
+            item.className = `evaluation-item mb-6 p-4 border rounded-md ${objective.isExceptional ? 'bg-purple-50' : 'bg-white'} fade-in`;
+            item.innerHTML = `
+                <div class="mb-3">
+                    <h3 class="font-medium text-gray-700 flex items-center mb-1">
+                        <i class="${objective.isExceptional ? 'fas fa-star mr-2 text-purple-500' : 'fas fa-bullseye mr-2 text-blue-500'}"></i>
+                        ${objective.isExceptional ? 'Objectif Exceptionnel' : `Objectif ${index + 1}`}: ${objective.description}
+                    </h3>
+                    <div class="flex flex-wrap text-sm text-gray-500 gap-3">
+                        <span><b>Poids:</b> ${objective.weight}%</span>
+                        <span><b>Seuil:</b> ${objective.floor || '-'}</span>
+                        <span><b>Satisfaisant:</b> ${objective.satisfactory || '-'}</span>
+                        <span><b>Bonne perf.:</b> ${objective.goodPerformance || '-'}</span>
+                        <span><b>Cible:</b> ${objective.target || '-'}</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="block text-gray-700 mb-2">Niveau d'Atteinte</label>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2">
+                        <div class="achievement-level text-center p-2 border rounded-md" data-level="0"><div class="text-xs font-semibold text-red-500">Non Atteint</div><div class="text-sm">0%</div></div>
+                        <div class="achievement-level text-center p-2 border rounded-md" data-level="25"><div class="text-xs font-semibold text-orange-500">Avancement limité</div><div class="text-sm">25%</div></div>
+                        <div class="achievement-level text-center p-2 border rounded-md" data-level="50"><div class="text-xs font-semibold text-yellow-500">Réalisation incomplète</div><div class="text-sm">50%</div></div>
+                        <div class="achievement-level text-center p-2 border rounded-md" data-level="75"><div class="text-xs font-semibold text-green-500">Résultat satisfaisant</div><div class="text-sm">75%</div></div>
+                        <div class="achievement-level text-center p-2 border rounded-md" data-level="100"><div class="text-xs font-semibold text-blue-500">Atteint</div><div class="text-sm">100%</div></div>
+                      
+                    </div>
+                </div>
+                <div class="mb-3"><label class="block text-gray-700 mb-2">Valeur Réelle Obtenue</label>
+                    <input type="text" class="actual-value w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" placeholder="Ex: 85 ventes"></div>
+                <div><label class="block text-gray-700 mb-2">Commentaires</label>
+                    <textarea class="comments w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500" rows="2" placeholder="Commentaires sur cet objectif"></textarea></div>`;
+            container.appendChild(item);
+            item.querySelectorAll('.achievement-level').forEach(level => {
+                level.addEventListener('click', function() {
+                    item.querySelectorAll('.achievement-level').forEach(l => l.classList.remove('selected'));
+                    this.classList.add('selected');
+                });
+            });
+        });
+    }
+
+    document.getElementById('auto-calculate-score').addEventListener('click', autoCalculateScore);
+
+    function autoCalculateScore() {
+        const employeeName = document.getElementById('auto-collab-name').value.trim();
+        const managerName = document.getElementById('auto-manager-name').value.trim();
+        const company = document.getElementById('auto-societe').value.trim();
+        const date = document.getElementById('auto-eval-date').value;
+        const generalComments = document.getElementById('auto-general-comments').value;
+        if (!employeeName) { showAlert('Veuillez entrer votre nom.', 'error'); return; }
+        if (!managerName) { showAlert('Veuillez entrer le nom de votre manager.', 'error'); return; }
+        autoEvaluationResults = []; autoTotalScore = 0; let hasError = false;
+        document.querySelectorAll('#auto-evaluation-items-container .evaluation-item').forEach((item, index) => {
+            if (hasError) return;
+            const objective = autoCurrentObjectives[index];
+            const selectedLevel = item.querySelector('.achievement-level.selected');
+            const actualValue = item.querySelector('.actual-value').value;
+            const comments = item.querySelector('.comments').value;
+            if (!selectedLevel || !actualValue) { showAlert("Veuillez sélectionner un niveau d'atteinte et entrer une valeur réelle pour tous les objectifs.", 'error'); hasError = true; return; }
+            const achievementPercentage = Math.min(parseInt(selectedLevel.dataset.level), objective.isExceptional ? 120 : 100);
+            const score = (achievementPercentage / 100) * objective.weight;
+            autoEvaluationResults.push({ description: objective.description, weight: objective.weight, actualValue, achievementPercentage, score, comments, isExceptional: objective.isExceptional || false });
+            autoTotalScore += score;
+        });
+        if (hasError) return;
+        // Récupérer l'analyse des compétences au moment du calcul
+        const strengths = document.getElementById('strengths').value;
+        const weaknesses = document.getElementById('weaknesses').value;
+        const trainingProposals = document.getElementById('training-proposals').value;
+        // Sauvegarder dans savedEvaluations avec l'analyse des compétences
+        autoSaveToSharedStorage(employeeName, managerName, company, date, generalComments, strengths, weaknesses, trainingProposals);
+        autoRenderResults(employeeName, managerName, autoTotalScore);
+        autoResultsTab.click();
+        showAlert('Évaluation terminée et sauvegardée avec l\'analyse des compétences!', 'success');
+    }
+
+    function autoSaveToSharedStorage(employeeName, managerName, company, date, generalComments, strengths, weaknesses, trainingProposals) {
+        let saved = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
+        const newEntry = {
+            id: `auto-${employeeName}-${date}-${Date.now()}`,
+            type: 'auto-evaluation',
+            employeeName, managerName, company, date,
+            objectives: autoCurrentObjectives,
+            results: autoEvaluationResults,
+            totalScore: autoTotalScore,
+            generalComments,
+            strengths: strengths || '',
+            weaknesses: weaknesses || '',
+            trainingProposals: trainingProposals || '',
+            status: 'completed'
+        };
+        saved.push(newEntry);
+        localStorage.setItem('savedEvaluations', JSON.stringify(saved));
+    }
+
+    function autoGetPerformanceLevel(score) {
+        if (score < 50) return { level: 'Insuffisant', color: 'red' };
+        if (score < 70) return { level: 'En développement', color: 'orange' };
+        if (score < 90) return { level: 'Compétent', color: 'yellow' };
+        if (score < 110) return { level: 'Très compétent', color: 'green' };
+        return { level: 'Exceptionnel', color: 'blue' };
+    }
+
+    function autoRenderResults(employeeName, managerName, totalScore) {
+        const performance = autoGetPerformanceLevel(totalScore);
+        document.getElementById('auto-results-summary').innerHTML = `
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
+                <div>
+                    <h3 class="text-lg font-semibold text-gray-800 mb-1">Résumé de l'Évaluation</h3>
+                    <p class="text-gray-600">Collaborateur: <span class="font-medium">${employeeName}</span></p>
+                    <p class="text-gray-600">Manager: <span class="font-medium">${managerName}</span></p>
+                    <p class="text-gray-600">Date: <span class="font-medium">${new Date().toLocaleDateString('fr-FR')}</span></p>
+                </div>
+                <div class="text-center mt-4 md:mt-0">
+                    <div class="text-4xl font-bold text-blue-600">${totalScore.toFixed(1)}%</div>
+                    <div class="text-sm text-gray-500">Score Final</div>
+                    <span class="inline-block mt-2 px-3 py-1 rounded-full text-xs font-medium bg-${performance.color}-100 text-${performance.color}-800">${performance.level}</span>
+                </div>
+            </div>
+            <div class="mt-4">
+                <div class="flex justify-between text-sm text-gray-600 mb-1"><span>0%</span><span>100%</span></div>
+                <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(totalScore/1.2,100)}%;background-color:${totalScore>100?'#22c55e':'#3b82f6'};"></div></div>
+            </div>`;
+        document.getElementById('auto-results-details').innerHTML = `
+            <h3 class="text-lg font-semibold text-gray-800 mb-4">Détails par Objectif</h3>
+            <div class="overflow-x-auto"><table class="min-w-full bg-white border">
+                <thead><tr class="bg-gray-100 text-gray-700"><th class="py-3 px-4 text-left">Objectif</th><th class="py-3 px-4 text-center">Poids</th><th class="py-3 px-4 text-center">Valeur Réelle</th><th class="py-3 px-4 text-center">Atteinte</th><th class="py-3 px-4 text-center">Score</th></tr></thead>
+                <tbody>${autoEvaluationResults.map((r,i)=>`<tr class="border-b ${r.isExceptional?'bg-purple-50':''}"><td class="py-3 px-4"><div class="font-medium">${r.isExceptional?'<i class="fas fa-star mr-1 text-purple-500"></i>Exceptionnel':`Objectif ${i+1}`}</div><div class="text-sm text-gray-500">${r.description}</div>${r.comments?`<div class="text-xs text-gray-400 mt-1"><i class="fas fa-comment mr-1"></i>${r.comments}</div>`:''}</td><td class="py-3 px-4 text-center">${r.weight}%</td><td class="py-3 px-4 text-center">${r.actualValue}</td><td class="py-3 px-4 text-center"><span class="px-2 py-1 rounded-full text-xs font-medium ${r.achievementPercentage===0?'bg-red-100 text-red-800':r.achievementPercentage===25?'bg-orange-100 text-orange-800':r.achievementPercentage===50?'bg-yellow-100 text-yellow-800':r.achievementPercentage===75?'bg-green-100 text-green-800':r.achievementPercentage===100?'bg-blue-100 text-blue-800':'bg-purple-100 text-purple-800'}">${r.achievementPercentage}%</span></td><td class="py-3 px-4 text-center font-medium">${r.score.toFixed(1)}%</td></tr>`).join('')}</tbody>
+                <tfoot class="bg-gray-50"><tr><td colspan="4" class="py-3 px-4 text-right font-medium">Score Total:</td><td class="py-3 px-4 text-center font-bold text-blue-600">${totalScore.toFixed(1)}%</td></tr></tfoot>
+            </table></div>`;
+    }
+
+    // =============================================
+    // MODULE 4 : ÉVALUATIONS SAUVEGARDÉES
+    // =============================================
+    function renderAutoSavedEvaluations() {
+        const saved = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
+        const searchTerm = (document.getElementById('search-auto-saved').value || '').toLowerCase();
+        const autoEvals = saved
+            .filter(e => e.type === 'auto-evaluation')
+            .filter(e => !searchTerm || e.employeeName.toLowerCase().includes(searchTerm) || (e.company||'').toLowerCase().includes(searchTerm))
+            .slice().reverse();
+
+        document.getElementById('autoeval-count').textContent = autoEvals.length;
+        const list = document.getElementById('autoeval-list');
+        list.innerHTML = '';
+
+        if (autoEvals.length === 0) {
+            list.innerHTML = `<div class="text-center py-10 text-gray-400"><i class="fas fa-user-check text-5xl mb-3 block"></i><p class="text-lg">Aucune évaluation sauvegardée</p></div>`;
             return;
         }
 
-        if (isExceptional) {
-            objectives.push({
-                id: item.dataset.id || Date.now().toString() + Math.random(),
-                description,
-                weight,
-                isExceptional
-            });
-        } else {
-            const floor = item.querySelector('.objective-floor').value.trim();
-            const satisfactory = item.querySelector('.objective-satisfactory').value.trim();
-            const goodPerformance = item.querySelector('.objective-goodPerformance').value.trim();
-            const target = item.querySelector('.objective-target').value.trim();
+        autoEvals.forEach(evaluation => {
+            const score = Number(evaluation.totalScore || 0);
+            const perf = score >= 110 ? {label:'Exceptionnel', color:'blue'} :
+                         score >= 90  ? {label:'Très compétent', color:'green'} :
+                         score >= 70  ? {label:'Compétent', color:'yellow'} :
+                         score >= 50  ? {label:'En développement', color:'orange'} :
+                                        {label:'Insuffisant', color:'red'};
+            const el = document.createElement('div');
+            el.className = 'border border-purple-100 rounded-lg p-4 hover:bg-purple-50 transition-colors';
+            el.innerHTML = `
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h4 class="font-semibold text-gray-800">${evaluation.employeeName}</h4>
+                        <p class="text-sm text-gray-500">${evaluation.company}</p>
+                        <p class="text-xs text-gray-400 mt-1">
+                            Manager: <span class="font-medium">${evaluation.managerName || '-'}</span>
+                            &nbsp;·&nbsp; ${new Date(evaluation.date).toLocaleDateString('fr-FR')}
+                        </p>
+                    </div>
+                    <div class="flex items-center gap-3 ml-2">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-purple-600">${score.toFixed(1)}%</div>
+                            <div class="text-xs text-gray-400">Score Final</div>
+                        </div>
+                        <div class="flex flex-col gap-1">
+                            <button class="view-auto-eval px-3 py-1 bg-purple-500 text-white rounded-md text-sm hover:bg-purple-600">
+                                <i class="fas fa-eye mr-1"></i> Voir
+                            </button>
+                            <button class="delete-auto-eval px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600">
+                                <i class="fas fa-trash mr-1"></i> Supprimer
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-2 flex items-center gap-2 flex-wrap">
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <i class="fas fa-check-circle mr-1"></i>Terminée
+                    </span>
+                    <span class="px-2 py-1 rounded-full text-xs font-medium bg-${perf.color}-100 text-${perf.color}-800">
+                        ${perf.label}
+                    </span>
+                    <span class="text-xs text-gray-400">${(evaluation.objectives||[]).length} objectif(s)</span>
+                    ${evaluation.strengths || evaluation.weaknesses || evaluation.trainingProposals
+                        ? `<span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800"><i class="fas fa-tasks mr-1"></i>Analyse des compétences incluse</span>`
+                        : `<span class="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500"><i class="fas fa-tasks mr-1"></i>Sans analyse des compétences</span>`}
+                </div>
+                ${evaluation.strengths ? `<div class="mt-3 pt-3 border-t border-purple-100 grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div class="bg-green-50 rounded p-2"><p class="font-semibold text-green-700 mb-1"><i class="fas fa-thumbs-up mr-1"></i>Points Forts</p><p class="text-gray-600 line-clamp-2">${evaluation.strengths}</p></div>
+                    ${evaluation.weaknesses ? `<div class="bg-red-50 rounded p-2"><p class="font-semibold text-red-700 mb-1"><i class="fas fa-thumbs-down mr-1"></i>Axes d'Amélioration</p><p class="text-gray-600 line-clamp-2">${evaluation.weaknesses}</p></div>` : ''}
+                    ${evaluation.trainingProposals ? `<div class="bg-purple-50 rounded p-2"><p class="font-semibold text-purple-700 mb-1"><i class="fas fa-graduation-cap mr-1"></i>Formations</p><p class="text-gray-600 line-clamp-2">${evaluation.trainingProposals}</p></div>` : ''}
+                </div>` : ''}`;
+            list.appendChild(el);
 
-            if (!floor || !satisfactory || !goodPerformance || !target) {
-                showAlert('Veuillez remplir tous les champs pour chaque objectif standard.', 'error');
-                allObjectivesValid = false;
-                return;
+            el.querySelector('.view-auto-eval').addEventListener('click', () => loadAutoEvaluation(evaluation.id));
+            el.querySelector('.delete-auto-eval').addEventListener('click', () => {
+                if (confirm('Supprimer cette évaluation ?')) {
+                    let s = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
+                    s = s.filter(e => e.id != evaluation.id);
+                    localStorage.setItem('savedEvaluations', JSON.stringify(s));
+                    showAlert('Évaluation supprimée.', 'success');
+                    renderAutoSavedEvaluations();
+                }
+            });
+        });
+    }
+
+    document.getElementById('auto-new-evaluation').addEventListener('click', autoResetForm);
+    document.getElementById('search-auto-saved').addEventListener('input', renderAutoSavedEvaluations);
+    document.getElementById('auto-print-results').addEventListener('click', () => window.print());
+    document.getElementById('auto-send-to-rh').addEventListener('click', autoSendToRH);
+    document.getElementById('save-analysis').addEventListener('click', function() {
+        const strengths = document.getElementById('strengths').value.trim();
+        const weaknesses = document.getElementById('weaknesses').value.trim();
+        const trainingProposals = document.getElementById('training-proposals').value.trim();
+        if (!strengths && !weaknesses && !trainingProposals) { showAlert("Veuillez remplir au moins un champ de l'analyse des compétences.", 'error'); return; }
+        // Mettre à jour la dernière entrée auto-évaluation sauvegardée
+        let saved = JSON.parse(localStorage.getItem('savedEvaluations')) || [];
+        const autoEntries = saved.filter(e => e.type === 'auto-evaluation');
+        if (autoEntries.length > 0) {
+            const lastEntry = autoEntries[autoEntries.length - 1];
+            const idx = saved.findIndex(e => e.id === lastEntry.id);
+            if (idx !== -1) {
+                saved[idx].strengths = strengths;
+                saved[idx].weaknesses = weaknesses;
+                saved[idx].trainingProposals = trainingProposals;
+                localStorage.setItem('savedEvaluations', JSON.stringify(saved));
             }
-
-            objectives.push({
-                id: item.dataset.id || Date.now().toString() + Math.random(),
-                description,
-                weight,
-                floor,
-                satisfactory,
-                goodPerformance,
-                target,
-                isExceptional
-            });
         }
+        showAlert("L'analyse des compétences a été enregistrée avec l'évaluation.", 'success');
     });
 
-    if (!allObjectivesValid) return;
-
-    // Si tout est OK, on sauvegarde
-
-    //saveEvaluationToLocalStorage();
-
-    // Ici tu peux poursuivre avec l'envoi ou autre logique
-
-
-    if (!objectives || objectives.length === 0) {
-        alert("Aucun objectif à envoyer.");
-        return;
+    function autoSendToRH() {
+        const employeeName = document.getElementById('auto-collab-name').value || 'Collaborateur';
+        const managerName = document.getElementById('auto-manager-name').value || 'Manager';
+        const company = document.getElementById('auto-societe').value || 'Société';
+        const date = document.getElementById('auto-eval-date').value || new Date().toISOString().split('T')[0];
+        const generalComments = document.getElementById('auto-general-comments').value || '';
+        const strengths = document.getElementById('strengths').value || '';
+        const weaknesses = document.getElementById('weaknesses').value || '';
+        const trainingProposals = document.getElementById('training-proposals').value || '';
+        if (!autoEvaluationResults || autoEvaluationResults.length === 0) { showAlert("Aucun résultat à envoyer.", 'error'); return; }
+        const wb = XLSX.utils.book_new();
+        
+        // ===== FEUILLE 1 : RÉSUMÉ =====
+        const summaryData = [
+            ['Nom du Collaborateur', employeeName],
+            ['Société', company],
+            ['Nom du Manager', managerName],
+            ['Date d\'évaluation', date],
+            ['Score Final (%)', autoTotalScore.toFixed(1)],
+            ['Commentaires Généraux', generalComments],
+            [],
+            ['Points Forts', strengths],
+            [],
+            ['Axes d\'Amélioration', weaknesses],
+            [],
+            ['Formations Proposées', trainingProposals]
+        ];
+        const sheet1 = XLSX.utils.aoa_to_sheet(summaryData);
+        sheet1['!cols'] = [{wch: 25}, {wch: 50}];
+        XLSX.utils.book_append_sheet(wb, sheet1, "Résumé");
+        
+        // ===== FEUILLE 2 : DÉTAILS DES OBJECTIFS =====
+        const objectivesData = [
+            ['Objectif', 'Poids (%)', 'Valeur Réelle', 'Atteinte (%)', 'Score Obtenu', 'Commentaires']
+        ];
+        autoEvaluationResults.forEach(obj => objectivesData.push([obj.description, obj.weight, obj.actualValue, obj.achievementPercentage, obj.score.toFixed(1), obj.comments || '']));
+        objectivesData.push([]);
+        
+        
+        const sheet2 = XLSX.utils.aoa_to_sheet(objectivesData);
+        sheet2['!cols'] = [{wch: 30}, {wch: 12}, {wch: 15}, {wch: 12}, {wch: 15}, {wch: 25}];
+        XLSX.utils.book_append_sheet(wb, sheet2, "Objectifs");
+        XLSX.writeFile(wb, `Resultats_Performance_${employeeName.replace(/\s+/g, '_')}_${date}.xlsx`);
+        const subject = encodeURIComponent(`Resultats_Performance ${employeeName}`);
+        const body = encodeURIComponent(`Bonjour,\n\nVeuillez trouver ci-joint les résultats de l’évaluation de ${employeeName}\n\nSociété: ${company}\nManager: ${managerName}\nDate: ${date}\nScore Final: ${autoTotalScore.toFixed(1)}%\n\nCordialement,\n${employeeName}`);
+        window.location.href = `mailto:${employeeName},rh.performance@orbisholding.ma?subject=${subject}&body=${body}`;
+        showAlert("Fichier Excel généré avec 2 feuilles. Veuillez l'attacher à votre email.", 'success');
     }
-    // Préparer les données
-    const objectivesData = objectives.map((obj, index) => ({
-        'Nom de collaborateur': collaborateurName,
-        'Société': collaborateurSociete,
-        'Nom du Manager': managerName,
-        'Objectif': obj.description,
-        'Poids (%)': obj.weight,
-        'Seuil de départ': obj.floor,
-        'Satisfaisant ':obj.satisfactory,
-        'Bonne performance':obj.goodPerformance,
-        'Cible': obj.target,
-        'Type': obj.isExceptional ? 'Exceptionnel' : `Objectif ${index + 1}`
-    }));
-       // En-tête de la feuille
-    const infoHeader = [
-     
-    ];
-  
-    const wb = XLSX.utils.book_new();
-    const sheet = XLSX.utils.json_to_sheet(objectivesData, { origin: "A6" });
-    XLSX.utils.sheet_add_aoa(sheet, infoHeader, { origin: "A1" });
-    XLSX.utils.book_append_sheet(wb, sheet, "Objectifs");
-    const date = new Date().toISOString().split("T")[0];
-    const fileName = `Objectifs_${collaborateurName.replace(/\s+/g, '_')}_${date}.xlsx`;
-    XLSX.writeFile(wb, fileName);
-    // Préparer et ouvrir l'email
-    const to = `${collaborateurName},rh.performance@orbisholding.ma`; // <-- à adapter
-    const subject = encodeURIComponent(`Objectifs  - ${collaborateurName}`);
-    const bodyText = `Bonjour,\n\nNous vous transmettons ci-joint les objectifs établis pour ${collaborateurName} \n\nBien cordialement,\n${managerName}`;
-    const body = encodeURIComponent(bodyText);
-    alert("Le fichier Excel des objectifs a été téléchargé. Un e-mail est prêt à être envoyé aux RH et au collaborateur.");
-    window.location.href = `mailto:${to}?subject=${subject}&body=${body}`;
+
+    // =============================================
+    // GLOBAL ALERT
+    // =============================================
+    function showAlert(message, type) {
+        const alertDiv = document.createElement('div');
+        alertDiv.className = `fixed top-4 right-4 p-4 rounded-md shadow-lg z-50 fade-in ${type==='error'?'bg-red-100 border-l-4 border-red-500 text-red-700':type==='info'?'bg-blue-100 border-l-4 border-blue-500 text-blue-700':'bg-green-100 border-l-4 border-green-500 text-green-700'}`;
+        alertDiv.innerHTML = `<div class="flex items-center"><i class="fas ${type==='error'?'fa-exclamation-circle':type==='info'?'fa-info-circle':'fa-check-circle'} mr-2"></i><div><p class="font-medium">${type==='error'?'Erreur':type==='info'?'Information':'Succès'}</p><p>${message}</p></div><button class="ml-4 text-gray-500 hover:text-gray-700" onclick="this.parentElement.parentElement.remove()"><i class="fas fa-times"></i></button></div>`;
+        document.body.appendChild(alertDiv);
+        setTimeout(() => { if(alertDiv.parentNode) alertDiv.remove(); }, 5000);
+    }
+    window.showAlert = showAlert;
 });
-       });   
- </script>
 
-
+// autoResetForm doit être globale (appelée aussi depuis nav)
+function autoResetForm() {
+    const f = (id, val='') => { const el = document.getElementById(id); if(el) el.value = val; };
+    f('auto-collab-name'); f('auto-manager-name'); f('auto-societe');
+    const dateEl = document.getElementById('auto-eval-date');
+    if(dateEl) dateEl.valueAsDate = new Date();
+    f('auto-general-comments');
+   f('strengths');              // ← Vider l'analyse
+    f('weaknesses');             // ← Vider l'analyse
+    f('training-proposals');     // ← Vider l'analyse
+    const fi = document.getElementById('auto-file-input'); if(fi) fi.value = '';
+    const finfo = document.getElementById('auto-file-info'); if(finfo) finfo.classList.add('hidden');
+    const ec = document.getElementById('auto-evaluation-container'); if(ec) ec.classList.add('hidden');
+}
+</script>
 </body>
 </html>
+
+
